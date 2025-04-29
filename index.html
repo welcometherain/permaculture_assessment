@@ -3,37 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Permaculture Site Analysis</title>
+    <title>Simple Permaculture Analysis</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAuFONHLyXGalqEH9VL3oFl8MpHgF7sa5k&libraries=places" async defer></script>
-    <script src="https://unpkg.com/jspdf@latest/dist/jspdf.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <style>
-        .section-card {
-            transition: all 0.3s ease;
-        }
-        .section-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-        }
         /* Dark mode support */
-        .dark .section-card {
-            background-color: #2d3748;
-            color: #e2e8f0;
-        }
         .dark {
             background-color: #181818;
+            color: #e2e8f0;
+        }
+        .dark .card {
+            background-color: #2d3748;
             color: #e2e8f0;
         }
         #sunpath-diagram {
             width: 100%;
             height: 200px;
             position: relative;
-        }
-        #soil-chart {
-            max-width: 100%;
-            height: 250px;
         }
         #climate-chart {
             max-width: 100%;
@@ -87,18 +74,15 @@
     </div>
 
     <header class="bg-white dark:bg-gray-800 shadow">
-        <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
-            <h1 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mr-2 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                </svg>
-                Permaculture Site Analysis
+        <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
+                Simple Permaculture Site Analysis
             </h1>
         </div>
     </header>
 
     <main class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-        <!-- Search and Map Section -->
+        <!-- Map Section -->
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
             <h2 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Select Your Location</h2>
             
@@ -117,193 +101,43 @@
             </div>
         </div>
 
-        <!-- Analysis Sections -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <!-- Climate Section -->
-            <div id="climate-section" class="section-card bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <h2 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                    </svg>
-                    Climate History (30-Year)
-                </h2>
-                <div>
-                    <canvas id="climate-chart"></canvas>
-                </div>
-                <div class="grid grid-cols-2 gap-4 mt-4">
-                    <div>
-                        <h3 class="font-medium text-gray-700 dark:text-gray-300">Average Annual Rainfall</h3>
-                        <p id="avg-rainfall" class="text-2xl font-bold text-primary">--</p>
-                    </div>
-                    <div>
-                        <h3 class="font-medium text-gray-700 dark:text-gray-300">Temperature Range</h3>
-                        <p id="temp-range" class="text-2xl font-bold text-primary">--</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Soil Section -->
-            <div id="soil-section" class="section-card bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <h2 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
-                    </svg>
-                    Soil Data
-                </h2>
-                <div>
-                    <canvas id="soil-chart"></canvas>
-                </div>
-                <div class="grid grid-cols-2 gap-4 mt-4">
-                    <div>
-                        <h3 class="font-medium text-gray-700 dark:text-gray-300">Soil Type</h3>
-                        <p id="soil-type" class="text-xl font-bold text-primary">--</p>
-                    </div>
-                    <div>
-                        <h3 class="font-medium text-gray-700 dark:text-gray-300">pH Level</h3>
-                        <p id="soil-ph" class="text-xl font-bold text-primary">--</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <!-- Topography Section -->
-            <div id="topography-section" class="section-card bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <h2 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                    </svg>
-                    Topography & Elevation
-                </h2>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <h3 class="font-medium text-gray-700 dark:text-gray-300">Elevation</h3>
-                        <p id="elevation" class="text-2xl font-bold text-primary">--</p>
-                    </div>
-                    <div>
-                        <h3 class="font-medium text-gray-700 dark:text-gray-300">Slope</h3>
-                        <p id="slope" class="text-2xl font-bold text-primary">--</p>
-                    </div>
-                    <div>
-                        <h3 class="font-medium text-gray-700 dark:text-gray-300">Aspect</h3>
-                        <p id="aspect" class="text-2xl font-bold text-primary">--</p>
-                    </div>
-                    <div>
-                        <h3 class="font-medium text-gray-700 dark:text-gray-300">Landform</h3>
-                        <p id="landform" class="text-2xl font-bold text-primary">--</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Sun Path Section -->
-            <div id="sunpath-section" class="section-card bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <h2 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                    </svg>
-                    Sun Path Analysis
-                </h2>
-                <div id="sunpath-diagram" class="bg-gray-200 dark:bg-gray-700 rounded-lg relative overflow-hidden">
-                    <!-- Sun path visualization will go here -->
-                </div>
-                <div class="mt-4">
-                    <label for="date-select" class="block text-gray-700 dark:text-gray-300 mb-2">Select Date:</label>
-                    <select id="date-select" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-base dark:bg-gray-700 dark:text-white">
-                        <option value="0321">March 21 (Spring Equinox)</option>
-                        <option value="0621">June 21 (Summer Solstice)</option>
-                        <option value="0921">September 21 (Fall Equinox)</option>
-                        <option value="1221">December 21 (Winter Solstice)</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <!-- Water Flow Section -->
-            <div id="water-section" class="section-card bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <h2 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-                    </svg>
-                    Water Flow & Catchment
-                </h2>
-                <div id="water-flow-map" class="h-40 bg-gray-200 dark:bg-gray-700 rounded-lg mb-4">
-                    <!-- Water flow visualization will go here -->
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <h3 class="font-medium text-gray-700 dark:text-gray-300">Flow Direction</h3>
-                        <p id="flow-direction" class="text-xl font-bold text-primary">--</p>
-                    </div>
-                    <div>
-                        <h3 class="font-medium text-gray-700 dark:text-gray-300">Catchment Area</h3>
-                        <p id="catchment-area" class="text-xl font-bold text-primary">--</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Native Plants Section -->
-            <div id="plants-section" class="section-card bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <h2 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                    </svg>
-                    Native Plants & Wildlife
-                </h2>
-                <div class="mb-4">
-                    <h3 class="font-medium text-gray-700 dark:text-gray-300 mb-2">Ecological Zone</h3>
-                    <p id="eco-zone" class="text-lg font-bold text-primary mb-2">--</p>
-                    <div id="native-plants-list" class="max-h-40 overflow-y-auto bg-gray-100 dark:bg-gray-700 p-3 rounded-lg">
-                        <p class="text-gray-500 dark:text-gray-400">Select a location to view native plants data.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Fire Risk Section (Especially for CA) -->
-        <div id="fire-section" class="section-card bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
-            <h2 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z" />
-                </svg>
-                Fire Risk Assessment
+        <!-- Climate Section -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6 card">
+            <h2 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white">
+                Climate History (30-Year)
             </h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <canvas id="climate-chart"></canvas>
+            </div>
+            <div class="grid grid-cols-2 gap-4 mt-4">
                 <div>
-                    <div id="fire-history-map" class="h-40 bg-gray-200 dark:bg-gray-700 rounded-lg mb-4">
-                        <!-- Fire history visualization will go here -->
-                    </div>
-                    <div>
-                        <h3 class="font-medium text-gray-700 dark:text-gray-300">Fire Frequency</h3>
-                        <p id="fire-frequency" class="text-xl font-bold text-primary">--</p>
-                    </div>
+                    <h3 class="font-medium text-gray-700 dark:text-gray-300">Average Annual Rainfall</h3>
+                    <p id="avg-rainfall" class="text-2xl font-bold text-primary">--</p>
                 </div>
                 <div>
-                    <div class="mb-4">
-                        <h3 class="font-medium text-gray-700 dark:text-gray-300 mb-2">Risk Factors</h3>
-                        <div id="fire-risk-factors" class="max-h-40 overflow-y-auto bg-gray-100 dark:bg-gray-700 p-3 rounded-lg">
-                            <p class="text-gray-500 dark:text-gray-400">Select a location to view fire risk data.</p>
-                        </div>
-                    </div>
+                    <h3 class="font-medium text-gray-700 dark:text-gray-300">Temperature Range</h3>
+                    <p id="temp-range" class="text-2xl font-bold text-primary">--</p>
                 </div>
             </div>
         </div>
 
-        <!-- Report Generator -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
-            <h2 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                Generate Site Analysis Report
+        <!-- Sun Path Section -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6 card">
+            <h2 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white">
+                Sun Path Analysis
             </h2>
-            <p class="text-gray-600 dark:text-gray-300 mb-4">
-                Generate a comprehensive PDF report of your site analysis including all data and visualizations.
-            </p>
-            <button id="generate-report-btn" class="px-6 py-2 bg-primary text-white rounded-md hover:bg-opacity-90 transition">
-                Generate PDF Report
-            </button>
+            <div id="sunpath-diagram" class="bg-gray-200 dark:bg-gray-700 rounded-lg relative overflow-hidden">
+                <!-- Sun path visualization will go here -->
+            </div>
+            <div class="mt-4">
+                <label for="date-select" class="block text-gray-700 dark:text-gray-300 mb-2">Select Date:</label>
+                <select id="date-select" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-base dark:bg-gray-700 dark:text-white">
+                    <option value="0321">March 21 (Spring Equinox)</option>
+                    <option value="0621">June 21 (Summer Solstice)</option>
+                    <option value="0921">September 21 (Fall Equinox)</option>
+                    <option value="1221">December 21 (Winter Solstice)</option>
+                </select>
+            </div>
         </div>
     </main>
     
@@ -314,989 +148,8 @@
         let geocoder;
         let selectedLocation = null;
         let climateChart = null;
-        let soilChart = null;
         
-        // Initialize map
-        function initMap() {
-            // Default location (San Francisco)
-            const defaultLocation = { lat: 37.7749, lng: -122.4194 };
-            
-            // Create map
-            map = new google.maps.Map(document.getElementById('map-container'), {
-                center: defaultLocation,
-                zoom: 12,
-                mapTypeId: 'terrain',
-                mapTypeControl: true,
-                mapTypeControlOptions: {
-                    style: google.maps.MapTypeControlStyle.DROPDOWN_MENU,
-                    mapTypeIds: ['roadmap', 'terrain', 'satellite', 'hybrid']
-                }
-            });
-            
-            // Create geocoder
-            geocoder = new google.maps.Geocoder();
-            
-            // Add click event to map
-            map.addListener('click', function(event) {
-                placeMarker(event.latLng);
-                updateSelectedLocation(event.latLng);
-                loadSiteData(event.latLng);
-            });
-            
-            // Initialize the search box
-            const input = document.getElementById('address-input');
-            const searchBox = new google.maps.places.SearchBox(input);
-            
-            // Bias the SearchBox results towards current map's viewport
-            map.addListener('bounds_changed', function() {
-                searchBox.setBounds(map.getBounds());
-            });
-            
-            // Listen for the event fired when the user selects a prediction
-            searchBox.addListener('places_changed', function() {
-                const places = searchBox.getPlaces();
-                
-                if (places.length === 0) {
-                    return;
-                }
-                
-                const place = places[0];
-                
-                if (!place.geometry || !place.geometry.location) {
-                    console.log("Returned place contains no geometry");
-                    return;
-                }
-                
-                // Set map view to the selected place
-                map.setCenter(place.geometry.location);
-                map.setZoom(15);
-                
-                // Place marker
-                placeMarker(place.geometry.location);
-                updateSelectedLocation(place.geometry.location);
-                loadSiteData(place.geometry.location);
-            });
-            
-            // Search button click handler
-            document.getElementById('search-button').addEventListener('click', function() {
-                const address = document.getElementById('address-input').value;
-                if (address) {
-                    geocoder.geocode({ 'address': address }, function(results, status) {
-                        if (status === 'OK') {
-                            map.setCenter(results[0].geometry.location);
-                            map.setZoom(15);
-                            placeMarker(results[0].geometry.location);
-                            updateSelectedLocation(results[0].geometry.location);
-                            loadSiteData(results[0].geometry.location);
-                        } else {
-                            alert('Geocode was not successful for the following reason: ' + status);
-                        }
-                    });
-                }
-            });
-            
-            // Use my location button click handler
-            document.getElementById('use-location-button').addEventListener('click', function() {
-                if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(function(position) {
-                        const pos = {
-                            lat: position.coords.latitude,
-                            lng: position.coords.longitude
-                        };
-                        
-                        map.setCenter(pos);
-                        map.setZoom(15);
-                        placeMarker(pos);
-                        updateSelectedLocation(pos);
-                        loadSiteData(pos);
-                    }, function() {
-                        alert('Error: The Geolocation service failed.');
-                    });
-                } else {
-                    alert('Error: Your browser doesn\'t support geolocation.');
-                }
-            });
-            
-            // Generate report button click handler
-            document.getElementById('generate-report-btn').addEventListener('click', function() {
-                if (!selectedLocation) {
-                    alert('Please select a location first.');
-                    return;
-                }
-                
-                generatePDFReport();
-            });
-            
-            // Date selection change handler for sun path
-            document.getElementById('date-select').addEventListener('change', function() {
-                if (selectedLocation) {
-                    updateSunPath(selectedLocation, this.value);
-                }
-            });
-        }
-        
-        // Function to place marker on map
-        function placeMarker(location) {
-            if (marker) {
-                marker.setMap(null);
-            }
-            
-            marker = new google.maps.Marker({
-                position: location,
-                map: map,
-                animation: google.maps.Animation.DROP
-            });
-        }
-        
-        // Function to update selected location display
-        function updateSelectedLocation(location) {
-            selectedLocation = location;
-            
-            // Reverse geocode to get address
-            geocoder.geocode({ 'location': location }, function(results, status) {
-                if (status === 'OK') {
-                    if (results[0]) {
-                        document.getElementById('selected-location').textContent = 
-                            `Selected Location: ${results[0].formatted_address}`;
-                    } else {
-                        document.getElementById('selected-location').textContent = 
-                            `Selected Location: (${location.lat().toFixed(5)}, ${location.lng().toFixed(5)})`;
-                    }
-                } else {
-                    document.getElementById('selected-location').textContent = 
-                        `Selected Location: (${location.lat().toFixed(5)}, ${location.lng().toFixed(5)})`;
-                }
-            });
-        }
-        
-        // Function to simulate loading site data
-        // In a real application, this would make API calls to various data sources
-        function loadSiteData(location) {
-            // Show loading indicator
-            document.getElementById('loading-indicator').classList.remove('hidden');
-            
-            // Simulate API call delay
-            setTimeout(() => {
-                try {
-                    // Climate data
-                    updateClimateData(location);
-                    
-                    // Soil data
-                    updateSoilData(location);
-                    
-                    // Topography data
-                    updateTopographyData(location);
-                    
-                    // Sun path
-                    updateSunPath(location, document.getElementById('date-select').value);
-                    
-                    // Water flow
-                    updateWaterFlowData(location);
-                    
-                    // Native plants
-                    updateNativePlantsData(location);
-                    
-                    // Fire risk
-                    updateFireRiskData(location);
-                } catch (error) {
-                    console.error("Error loading site data:", error);
-                } finally {
-                    // Always hide loading indicator even if there's an error
-                    document.getElementById('loading-indicator').classList.add('hidden');
-                }
-            }, 1500);
-        }
-        
-        // Function to update climate data
-        function updateClimateData(location) {
-            // Simulate climate data - in reality, this would come from an API
-            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-            
-            // Generate random temperature data based on location
-            // Using latitude to simulate seasonal variations
-            const lat = location.lat();
-            const tempOffset = (Math.abs(lat) - 30) * 0.5; // Adjust temperatures based on latitude
-            
-            const highTemps = months.map((_, index) => {
-                const seasonalFactor = Math.sin((index / 12) * 2 * Math.PI);
-                return Math.round(25 - tempOffset + seasonalFactor * (15 - lat * 0.1));
-            });
-            
-            const lowTemps = months.map((_, index) => {
-                const seasonalFactor = Math.sin((index / 12) * 2 * Math.PI);
-                return Math.round(15 - tempOffset + seasonalFactor * (10 - lat * 0.1));
-            });
-            
-            // Generate random rainfall data
-            // Using longitude to simulate different climate patterns
-            const lng = location.lng();
-            const isWesternHemisphere = lng < 0;
-            
-            const rainfall = months.map((_, index) => {
-                let seasonalFactor;
-                
-                if (isWesternHemisphere) {
-                    // Western hemisphere seasonal patterns
-                    if (lat > 0) {
-                        // Northern hemisphere
-                        seasonalFactor = Math.cos((index / 12) * 2 * Math.PI);
-                    } else {
-                        // Southern hemisphere
-                        seasonalFactor = -Math.cos((index / 12) * 2 * Math.PI);
-                    }
-                } else {
-                    // Eastern hemisphere seasonal patterns
-                    if (lat > 0) {
-                        // Northern hemisphere
-                        seasonalFactor = Math.sin((index / 12) * 2 * Math.PI);
-                    } else {
-                        // Southern hemisphere
-                        seasonalFactor = -Math.sin((index / 12) * 2 * Math.PI);
-                    }
-                }
-                
-                return Math.max(5, Math.round(50 + seasonalFactor * 30 + Math.random() * 20));
-            });
-            
-            // Update chart
-            if (climateChart) {
-                climateChart.destroy();
-            }
-            
-            const ctx = document.getElementById('climate-chart').getContext('2d');
-            
-            climateChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: months,
-                    datasets: [
-                        {
-                            label: 'High Temp (°C)',
-                            data: highTemps,
-                            backgroundColor: 'rgba(255, 99, 132, 0.5)',
-                            borderColor: 'rgba(255, 99, 132, 1)',
-                            borderWidth: 1,
-                            type: 'line',
-                            yAxisID: 'y'
-                        },
-                        {
-                            label: 'Low Temp (°C)',
-                            data: lowTemps,
-                            backgroundColor: 'rgba(54, 162, 235, 0.5)',
-                            borderColor: 'rgba(54, 162, 235, 1)',
-                            borderWidth: 1,
-                            type: 'line',
-                            yAxisID: 'y'
-                        },
-                        {
-                            label: 'Rainfall (mm)',
-                            data: rainfall,
-                            backgroundColor: 'rgba(75, 192, 192, 0.5)',
-                            borderColor: 'rgba(75, 192, 192, 1)',
-                            borderWidth: 1,
-                            yAxisID: 'y1'
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    interaction: {
-                        mode: 'index',
-                        intersect: false,
-                    },
-                    scales: {
-                        y: {
-                            type: 'linear',
-                            display: true,
-                            position: 'left',
-                            title: {
-                                display: true,
-                                text: 'Temperature (°C)'
-                            }
-                        },
-                        y1: {
-                            type: 'linear',
-                            display: true,
-                            position: 'right',
-                            grid: {
-                                drawOnChartArea: false,
-                            },
-                            title: {
-                                display: true,
-                                text: 'Rainfall (mm)'
-                            }
-                        }
-                    }
-                }
-            });
-            
-            // Update summary data
-            const totalRainfall = rainfall.reduce((sum, val) => sum + val, 0);
-            document.getElementById('avg-rainfall').textContent = `${Math.round(totalRainfall)} mm/year`;
-            
-            const minTemp = Math.min(...lowTemps);
-            const maxTemp = Math.max(...highTemps);
-            document.getElementById('temp-range').textContent = `${minTemp}°C to ${maxTemp}°C`;
-        }
-        
-        // Function to update soil data
-        function updateSoilData(location) {
-            // Simulate soil data - in reality, this would come from an API
-            const lat = location.lat();
-            const lng = location.lng();
-            
-            // Use location to generate consistent pseudorandom values
-            const soilSeed = Math.abs(Math.sin(lat) * Math.cos(lng) * 10000);
-            const soilRand = (offset = 0) => ((soilSeed + offset) % 100) / 100;
-            
-            // Calculate soil composition
-            const clay = Math.round(20 + soilRand(1) * 40);
-            const sand = Math.round(20 + soilRand(2) * 40);
-            const silt = 100 - clay - sand;
-            
-            // Determine soil type based on composition
-            let soilType = "Unknown";
-            
-            if (clay >= 40) {
-                soilType = "Clay";
-            } else if (sand >= 50) {
-                soilType = "Sandy";
-            } else if (silt >= 50) {
-                soilType = "Silty";
-            } else if (clay >= 20 && sand >= 20 && silt >= 20) {
-                soilType = "Loam";
-            } else if (clay >= 35 && sand <= 20) {
-                soilType = "Clay Loam";
-            } else if (sand >= 35 && clay <= 20) {
-                soilType = "Sandy Loam";
-            } else if (silt >= 35 && clay <= 20) {
-                soilType = "Silty Loam";
-            }
-            
-            // Calculate soil pH - using longitude as a factor to create variation
-            const pHBase = 5.5 + (Math.abs(lng) % 180) / 180 * 3;
-            const pH = (pHBase + soilRand(3) * 1.5).toFixed(1);
-            
-            // Update chart
-            if (soilChart) {
-                soilChart.destroy();
-            }
-            
-            const ctx = document.getElementById('soil-chart').getContext('2d');
-            
-            soilChart = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Clay', 'Sand', 'Silt'],
-                    datasets: [{
-                        data: [clay, sand, silt],
-                        backgroundColor: [
-                            'rgba(255, 99, 132, 0.7)',
-                            'rgba(255, 206, 86, 0.7)',
-                            'rgba(54, 162, 235, 0.7)'
-                        ],
-                        borderColor: [
-                            'rgba(255, 99, 132, 1)',
-                            'rgba(255, 206, 86, 1)',
-                            'rgba(54, 162, 235, 1)'
-                        ],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            position: 'top',
-                        },
-                        title: {
-                            display: true,
-                            text: 'Soil Composition'
-                        }
-                    }
-                }
-            });
-            
-            // Update soil info
-            document.getElementById('soil-type').textContent = soilType;
-            document.getElementById('soil-ph').textContent = `pH ${pH}`;
-        }
-        
-        // Function to update topography data
-        function updateTopographyData(location) {
-            // Simulate topography data - in reality, this would come from elevation APIs
-            const lat = location.lat();
-            const lng = location.lng();
-            
-            // Use location to generate consistent pseudorandom values
-            const topoSeed = Math.abs(Math.cos(lat) * Math.sin(lng) * 10000);
-            const topoRand = (offset = 0) => ((topoSeed + offset) % 100) / 100;
-            
-            // Generate elevation based on latitude and longitude
-            const elevationBase = Math.abs(lat) > 45 ? 500 : Math.abs(lat) > 30 ? 300 : 100;
-            const elevation = Math.round(elevationBase + topoRand(1) * 700);
-            
-            // Generate slope
-            const slope = Math.round(topoRand(2) * 25);
-            
-            // Generate aspect (N, NE, E, SE, S, SW, W, NW)
-            const aspectIndex = Math.floor(topoRand(3) * 8);
-            const aspects = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
-            const aspect = aspects[aspectIndex];
-            
-            // Determine landform based on slope and random factor
-            let landform;
-            if (slope < 2) {
-                landform = topoRand(4) > 0.5 ? "Plain" : "Valley Floor";
-            } else if (slope < 8) {
-                landform = topoRand(4) > 0.5 ? "Gentle Slope" : "Terrace";
-            } else if (slope < 15) {
-                landform = topoRand(4) > 0.5 ? "Moderate Slope" : "Hillside";
-            } else {
-                landform = topoRand(4) > 0.5 ? "Steep Slope" : "Ridge";
-            }
-            
-            // Update topography info
-            document.getElementById('elevation').textContent = `${elevation} m`;
-            document.getElementById('slope').textContent = `${slope}%`;
-            document.getElementById('aspect').textContent = aspect;
-            document.getElementById('landform').textContent = landform;
-        }
-        
-        // Function to update sun path
-        function updateSunPath(location, dateCode) {
-            const sunpathDiagram = document.getElementById('sunpath-diagram');
-            // Make sure we have correct dimensions
-            sunpathDiagram.width = sunpathDiagram.offsetWidth;
-            sunpathDiagram.height = sunpathDiagram.offsetHeight;
-            const ctx = sunpathDiagram.getContext('2d');
-            
-            // Clear the canvas
-            ctx.clearRect(0, 0, sunpathDiagram.width, sunpathDiagram.height);
-            
-            // Set up the diagram
-            const width = sunpathDiagram.width;
-            const height = sunpathDiagram.height;
-            const centerX = width / 2;
-            const centerY = height * 0.7; // Lower the horizon to show more sky
-            const radius = Math.min(width, height) * 0.4;
-            
-            // Draw horizon line
-            ctx.beginPath();
-            ctx.moveTo(0, centerY);
-            ctx.lineTo(width, centerY);
-            ctx.strokeStyle = isDarkMode() ? '#666' : '#aaa';
-            ctx.lineWidth = 2;
-            ctx.stroke();
-            
-            // Draw compass points
-            const compassPoints = [
-                { label: 'N', angle: 0 },
-                { label: 'E', angle: Math.PI * 0.5 },
-                { label: 'S', angle: Math.PI },
-                { label: 'W', angle: Math.PI * 1.5 }
-            ];
-            
-            ctx.font = '14px Arial';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillStyle = isDarkMode() ? '#ddd' : '#333';
-            
-            compassPoints.forEach(point => {
-                const x = centerX + Math.sin(point.angle) * (radius + 20);
-                const y = centerY - Math.cos(point.angle) * (radius + 20);
-                ctx.fillText(point.label, x, y);
-            });
-            
-            // Calculate sun path for the selected date
-            let season = 'winter';
-            if (dateCode === '0321' || dateCode === '0921') {
-                season = 'equinox';
-            } else if (dateCode === '0621') {
-                season = 'summer';
-            }
-            
-            // Adjust path based on latitude
-            const latitude = location.lat();
-            const isNorthernHemisphere = latitude >= 0;
-            let maxAltitude;
-            
-            if (season === 'winter') {
-                maxAltitude = Math.max(0.1, 0.5 - Math.abs(latitude) / 90);
-                if (!isNorthernHemisphere) maxAltitude = 0.8 - maxAltitude;
-            } else if (season === 'equinox') {
-                maxAltitude = 0.5;
-            } else { // summer
-                maxAltitude = Math.min(0.9, 0.5 + Math.abs(latitude) / 90);
-                if (!isNorthernHemisphere) maxAltitude = 0.8 - maxAltitude;
-            }
-            
-            // Draw sun path arc
-            ctx.beginPath();
-            
-            // Create an arc from east to west
-            // We'll simulate the sun path as a half-circle, adjusted for season and latitude
-            ctx.moveTo(centerX - radius, centerY); // Starting at the west point
-            
-            // Draw the sun path
-            for (let angle = -Math.PI; angle <= 0; angle += 0.01) {
-                const x = centerX + Math.sin(angle) * radius;
-                const y = centerY - Math.cos(angle) * radius * maxAltitude;
-                
-                if (angle === -Math.PI) {
-                    ctx.moveTo(x, y);
-                } else {
-                    ctx.lineTo(x, y);
-                }
-            }
-            
-            ctx.strokeStyle = isDarkMode() ? '#ffa500' : '#ff6600';
-            ctx.lineWidth = 3;
-            ctx.stroke();
-            
-            // Draw sun positions at different times
-            const sunPositions = [
-                { time: 'Sunrise', angle: -Math.PI },
-                { time: '10:00', angle: -Math.PI * 0.75 },
-                { time: 'Noon', angle: -Math.PI * 0.5 },
-                { time: '15:00', angle: -Math.PI * 0.25 },
-                { time: 'Sunset', angle: 0 }
-            ];
-            
-            sunPositions.forEach(pos => {
-                const x = centerX + Math.sin(pos.angle) * radius;
-                const y = centerY - Math.cos(pos.angle) * radius * maxAltitude;
-                
-                // Draw sun
-                ctx.beginPath();
-                ctx.arc(x, y, 8, 0, Math.PI * 2);
-                ctx.fillStyle = isDarkMode() ? '#ffcc00' : '#ffaa00';
-                ctx.fill();
-                
-                // Draw time label
-                ctx.fillStyle = isDarkMode() ? '#ddd' : '#333';
-                ctx.fillText(pos.time, x, y + 20);
-            });
-        }
-        
-        // Function to update water flow data
-        function updateWaterFlowData(location) {
-            // In a real application, this would use topography data to determine water flow
-            const canvas = document.getElementById('water-flow-map');
-            const ctx = canvas.getContext('2d');
-            
-            // Adjust canvas resolution
-            canvas.width = canvas.offsetWidth;
-            canvas.height = canvas.offsetHeight;
-            
-            // Clear the canvas
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            // Draw a simulated water flow map
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2;
-            
-            // Use location to generate consistent pseudorandom values
-            const lat = location.lat();
-            const lng = location.lng();
-            const waterSeed = Math.abs(Math.sin(lat * 2) * Math.cos(lng * 2) * 10000);
-            const waterRand = (offset = 0) => ((waterSeed + offset) % 100) / 100;
-            
-            // Determine primary flow direction
-            const directionIndex = Math.floor(waterRand(1) * 8);
-            const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
-            const flowDirection = directions[directionIndex];
-            
-            // Calculate angle from direction
-            const angleOffset = directionIndex * Math.PI / 4;
-            
-            // Draw topography contour lines
-            ctx.strokeStyle = isDarkMode() ? 'rgba(150, 150, 150, 0.3)' : 'rgba(100, 100, 100, 0.2)';
-            ctx.lineWidth = 1;
-            
-            for (let i = 0; i < 5; i++) {
-                ctx.beginPath();
-                for (let angle = 0; angle < Math.PI * 2; angle += 0.01) {
-                    const radius = 20 + i * 15 + Math.sin(angle * 3 + waterRand(i) * 10) * 5;
-                    const x = centerX + Math.cos(angle) * radius;
-                    const y = centerY + Math.sin(angle) * radius;
-                    
-                    if (angle === 0) {
-                        ctx.moveTo(x, y);
-                    } else {
-                        ctx.lineTo(x, y);
-                    }
-                }
-                ctx.closePath();
-                ctx.stroke();
-            }
-            
-            // Draw water flow lines
-            ctx.strokeStyle = isDarkMode() ? 'rgba(64, 164, 223, 0.7)' : 'rgba(30, 144, 255, 0.7)';
-            ctx.lineWidth = 2;
-            
-            const flowLines = 8 + Math.floor(waterRand(2) * 5);
-            const startAngles = [];
-            
-            for (let i = 0; i < flowLines; i++) {
-                // Random starting position on the edge of the contour
-                const startAngle = waterRand(i * 3) * Math.PI * 2;
-                startAngles.push(startAngle);
-                
-                const startRadius = 20 + Math.floor(waterRand(i * 5) * 4) * 15;
-                let startX = centerX + Math.cos(startAngle) * startRadius;
-                let startY = centerY + Math.sin(startAngle) * startRadius;
-                
-                // Draw the flow line
-                ctx.beginPath();
-                ctx.moveTo(startX, startY);
-                
-                let currentX = startX;
-                let currentY = startY;
-                let currentRadius = startRadius;
-                
-                // Flow towards the direction with some randomness
-                const segments = 10 + Math.floor(waterRand(i * 7) * 15);
-                
-                for (let j = 0; j < segments; j++) {
-                    // Move towards center with primary direction influence
-                    const towardsCenterAngle = Math.atan2(centerY - currentY, centerX - currentX);
-                    const flowAngle = angleOffset + waterRand(i * j) * 0.5 - 0.25;
-                    
-                    // Blend the angles based on distance from center
-                    const distFromCenter = Math.sqrt(Math.pow(centerX - currentX, 2) + Math.pow(centerY - currentY, 2));
-                    const blendFactor = Math.min(1, distFromCenter / 70);
-                    
-                    const blendedAngle = towardsCenterAngle * (1 - blendFactor) + flowAngle * blendFactor;
-                    
-                    // Move in the calculated direction
-                    const moveDistance = 4 + waterRand(i * j * 2) * 3;
-                    currentX += Math.cos(blendedAngle) * moveDistance;
-                    currentY += Math.sin(blendedAngle) * moveDistance;
-                    
-                    // Update current radius
-                    currentRadius = Math.sqrt(Math.pow(currentX - centerX, 2) + Math.pow(currentY - centerY, 2));
-                    
-                    // Stop if we've reached the center or edge
-                    if (currentRadius < 5 || 
-                        currentX < 0 || currentX > canvas.width || 
-                        currentY < 0 || currentY > canvas.height) {
-                        break;
-                    }
-                    
-                    ctx.lineTo(currentX, currentY);
-                }
-                
-                ctx.stroke();
-            }
-            
-            // Draw catchment point
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, 5, 0, Math.PI * 2);
-            ctx.fillStyle = isDarkMode() ? '#4fc3f7' : '#0288d1';
-            ctx.fill();
-            
-            // Calculate catchment area based on water flow pattern
-            const catchmentPercentage = Math.round(40 + waterRand(3) * 30);
-            const catchmentArea = Math.round((0.5 + waterRand(4) * 1.5) * 10) / 10;
-            
-            // Update water flow info
-            document.getElementById('flow-direction').textContent = flowDirection;
-            document.getElementById('catchment-area').textContent = `~${catchmentArea} hectares`;
-        }
-        
-        // Function to update native plants data
-        function updateNativePlantsData(location) {
-            // In a real application, this would use APIs to get ecological zone and plant data
-            const lat = location.lat();
-            const lng = location.lng();
-            
-            // Determine ecological zone based on latitude
-            let ecoZone;
-            
-            if (lat > 66.5) {
-                ecoZone = "Arctic Tundra";
-            } else if (lat > 50) {
-                ecoZone = "Boreal Forest";
-            } else if (lat > 40) {
-                ecoZone = "Temperate Deciduous Forest";
-            } else if (lat > 30) {
-                ecoZone = "Mediterranean Woodland";
-            } else if (lat > 23.5) {
-                ecoZone = "Desert";
-            } else if (lat > 10) {
-                ecoZone = "Tropical Seasonal Forest";
-            } else if (lat > -10) {
-                ecoZone = "Tropical Rainforest";
-            } else if (lat > -23.5) {
-                ecoZone = "Tropical Seasonal Forest";
-            } else if (lat > -30) {
-                ecoZone = "Desert";
-            } else if (lat > -40) {
-                ecoZone = "Mediterranean Woodland";
-            } else if (lat > -50) {
-                ecoZone = "Temperate Deciduous Forest";
-            } else if (lat > -66.5) {
-                ecoZone = "Boreal Forest";
-            } else {
-                ecoZone = "Antarctic Tundra";
-            }
-            
-            // Adjust based on longitude - very simplified approach
-            if (Math.abs(lng) > 140) {
-                ecoZone += " (Coastal)";
-            } else if (Math.abs(lng) < 30) {
-                ecoZone += " (Continental)";
-            }
-            
-            // Update ecological zone
-            document.getElementById('eco-zone').textContent = ecoZone;
-            
-            // Generate sample native plants based on the ecological zone
-            const nativePlantsElement = document.getElementById('native-plants-list');
-            nativePlantsElement.innerHTML = '';
-            
-            const plants = getNativePlants(ecoZone);
-            
-            plants.forEach(plant => {
-                const plantElement = document.createElement('div');
-                plantElement.className = 'mb-2';
-                plantElement.innerHTML = `
-                    <span class="font-medium">${plant.name}</span>
-                    <span class="text-gray-500 dark:text-gray-400 text-sm"> - ${plant.type}</span>
-                `;
-                nativePlantsElement.appendChild(plantElement);
-            });
-        }
-        
-        // Function to get sample native plants for an ecological zone
-        function getNativePlants(ecoZone) {
-            const zoneToPlants = {
-                "Arctic Tundra": [
-                    { name: "Arctic Willow", type: "Shrub" },
-                    { name: "Arctic Moss", type: "Moss" },
-                    { name: "Caribou Moss", type: "Lichen" },
-                    { name: "Cotton Grass", type: "Grass" },
-                    { name: "Mountain Avens", type: "Flowering Plant" }
-                ],
-                "Boreal Forest": [
-                    { name: "Black Spruce", type: "Conifer" },
-                    { name: "Jack Pine", type: "Conifer" },
-                    { name: "White Birch", type: "Deciduous Tree" },
-                    { name: "Labrador Tea", type: "Shrub" },
-                    { name: "Lingonberry", type: "Shrub" }
-                ],
-                "Temperate Deciduous Forest": [
-                    { name: "Oak", type: "Deciduous Tree" },
-                    { name: "Maple", type: "Deciduous Tree" },
-                    { name: "Beech", type: "Deciduous Tree" },
-                    { name: "Trillium", type: "Flowering Plant" },
-                    { name: "Wild Ginger", type: "Herb" }
-                ],
-                "Mediterranean Woodland": [
-                    { name: "Olive", type: "Tree" },
-                    { name: "Cork Oak", type: "Tree" },
-                    { name: "Rosemary", type: "Shrub" },
-                    { name: "Lavender", type: "Shrub" },
-                    { name: "Mastic", type: "Shrub" }
-                ],
-                "Desert": [
-                    { name: "Saguaro Cactus", type: "Cactus" },
-                    { name: "Prickly Pear", type: "Cactus" },
-                    { name: "Creosote Bush", type: "Shrub" },
-                    { name: "Joshua Tree", type: "Succulent" },
-                    { name: "Desert Marigold", type: "Flowering Plant" }
-                ],
-                "Tropical Seasonal Forest": [
-                    { name: "Teak", type: "Tree" },
-                    { name: "Acacia", type: "Tree" },
-                    { name: "Bamboo", type: "Grass" },
-                    { name: "Kapok", type: "Tree" },
-                    { name: "Baobab", type: "Tree" }
-                ],
-                "Tropical Rainforest": [
-                    { name: "Mahogany", type: "Tree" },
-                    { name: "Rubber Tree", type: "Tree" },
-                    { name: "Banana", type: "Herbaceous Plant" },
-                    { name: "Orchid", type: "Epiphyte" },
-                    { name: "Heliconia", type: "Flowering Plant" }
-                ]
-            };
-            
-            // Find the base zone (without modifiers like Coastal)
-            const baseZone = Object.keys(zoneToPlants).find(key => ecoZone.includes(key));
-            
-            return baseZone ? zoneToPlants[baseZone] : [
-                { name: "Data not available", type: "Unknown" }
-            ];
-        }
-        
-        // Function to update fire risk data
-        function updateFireRiskData(location) {
-            // In a real application, this would use fire history data APIs
-            const lat = location.lat();
-            const lng = location.lng();
-            
-            // Use location to generate consistent pseudorandom values
-            const fireSeed = Math.abs(Math.sin(lat * 3) * Math.cos(lng * 3) * 10000);
-            const fireRand = (offset = 0) => ((fireSeed + offset) % 100) / 100;
-            
-            // Determine if California
-            const isCaliforniaLike = (lat > 32 && lat < 42 && lng < -114 && lng > -125);
-            
-            // Generate fire history visualization
-            const canvas = document.getElementById('fire-history-map');
-            const ctx = canvas.getContext('2d');
-            
-            // Adjust canvas resolution
-            canvas.width = canvas.offsetWidth;
-            canvas.height = canvas.offsetHeight;
-            
-            // Clear the canvas
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            // Draw base map
-            ctx.fillStyle = isDarkMode() ? '#3a3a3a' : '#f0f0f0';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            // Draw topography lines
-            ctx.strokeStyle = isDarkMode() ? 'rgba(180, 180, 180, 0.2)' : 'rgba(100, 100, 100, 0.1)';
-            ctx.lineWidth = 1;
-            
-            for (let i = 0; i < 5; i++) {
-                ctx.beginPath();
-                ctx.ellipse(
-                    canvas.width / 2 + (fireRand(i) * 20 - 10), 
-                    canvas.height / 2 + (fireRand(i + 1) * 20 - 10), 
-                    20 + i * 15, 
-                    15 + i * 10, 
-                    fireRand(i + 2) * Math.PI, 
-                    0, 
-                    Math.PI * 2
-                );
-                ctx.stroke();
-            }
-            
-            // Draw fire history perimeters - more if California-like
-            const fireCount = isCaliforniaLike ? 
-                3 + Math.floor(fireRand(1) * 4) : 
-                Math.floor(fireRand(1) * 3);
-            
-            for (let i = 0; i < fireCount; i++) {
-                const year = 2000 + Math.floor(fireRand(i * 3) * 23);
-                const size = 10 + fireRand(i * 5) * 40;
-                const x = 20 + fireRand(i * 7) * (canvas.width - 40);
-                const y = 20 + fireRand(i * 11) * (canvas.height - 40);
-                
-                // Draw fire perimeter
-                ctx.beginPath();
-                
-                // Create irregular polygon for fire perimeter
-                const points = 5 + Math.floor(fireRand(i * 13) * 4);
-                const baseRadius = size;
-                
-                for (let j = 0; j <= points; j++) {
-                    const angle = (j / points) * Math.PI * 2;
-                    const radius = baseRadius * (0.7 + fireRand(i * j) * 0.6);
-                    const pointX = x + Math.cos(angle) * radius;
-                    const pointY = y + Math.sin(angle) * radius;
-                    
-                    if (j === 0) {
-                        ctx.moveTo(pointX, pointY);
-                    } else {
-                        ctx.lineTo(pointX, pointY);
-                    }
-                }
-                
-                ctx.closePath();
-                
-                // Use different colors for different fire ages
-                const alpha = 0.8 - (2023 - year) / 30;
-                ctx.fillStyle = isDarkMode() ? 
-                    `rgba(220, 120, 50, ${alpha})` : 
-                    `rgba(255, 100, 50, ${alpha})`;
-                ctx.fill();
-                
-                // Add year label
-                ctx.fillStyle = isDarkMode() ? '#fff' : '#000';
-                ctx.font = '10px Arial';
-                ctx.textAlign = 'center';
-                ctx.fillText(year.toString(), x, y);
-            }
-            
-            // Calculate fire frequency (fires per decade)
-            const fireFrequency = isCaliforniaLike ? 
-                (0.5 + fireRand(3) * 1.5).toFixed(1) : 
-                (fireRand(3) * 0.8).toFixed(1);
-            
-            // Update fire info
-            document.getElementById('fire-frequency').textContent = `${fireFrequency} fires/decade`;
-            
-            // Update fire risk factors
-            const riskFactorsElement = document.getElementById('fire-risk-factors');
-            riskFactorsElement.innerHTML = '';
-            
-            // Generate risk factors based on location
-            const riskLevel = isCaliforniaLike ? 
-                (0.6 + fireRand(5) * 0.4) : 
-                fireRand(5) * 0.6;
-            
-            let riskFactors = [];
-            
-            if (riskLevel > 0.8) {
-                riskFactors = [
-                    "Extremely High Risk Area",
-                    "Prolonged drought conditions",
-                    "High fuel load from vegetation",
-                    "Steep terrain increases fire spread",
-                    "Limited evacuation routes"
-                ];
-            } else if (riskLevel > 0.6) {
-                riskFactors = [
-                    "High Risk Area",
-                    "Seasonal drought patterns",
-                    "Moderate fuel accumulation",
-                    "Variable terrain with some steep slopes",
-                    "Multiple but limited evacuation routes"
-                ];
-            } else if (riskLevel > 0.3) {
-                riskFactors = [
-                    "Moderate Risk Area",
-                    "Periodic dry conditions",
-                    "Mixed vegetation with moderate fuel load",
-                    "Generally manageable terrain",
-                    "Adequate evacuation routes"
-                ];
-            } else {
-                riskFactors = [
-                    "Low Risk Area",
-                    "Consistent precipitation",
-                    "Low fuel accumulation",
-                    "Flat or gentle terrain",
-                    "Good access for emergency services"
-                ];
-            }
-            
-            riskFactors.forEach(factor => {
-                const factorElement = document.createElement('div');
-                factorElement.className = 'mb-2';
-                factorElement.innerHTML = `• ${factor}`;
-                riskFactorsElement.appendChild(factorElement);
-            });
-        }
-        
-        // Function to generate PDF report
-        function generatePDFReport() {
-            // In a real application, this would create a full PDF report
-            alert("The PDF report generator would capture all data and visualizations into a downloadable PDF file. This functionality requires additional implementation with tools like jsPDF and html2canvas.");
-        }
-        
-        // Helper function to check if dark mode is active
-        function isDarkMode() {
-            return document.documentElement.classList.contains('dark');
-        }
-        
-        // Make sure we don't get stuck in loading state
+        // Force hide loading indicator after timeout
         function ensureLoadingCompletes() {
             setTimeout(() => {
                 const loadingIndicator = document.getElementById('loading-indicator');
@@ -1304,41 +157,478 @@
                     console.log('Forcing loading indicator to hide after timeout');
                     loadingIndicator.classList.add('hidden');
                 }
-            }, 10000); // Force hide after 10 seconds if something gets stuck
+            }, 5000);
         }
         
-        // Initialize the map when the Google Maps API is loaded
-        function initializeApp() {
+        // Initialize map
+        function initMap() {
             try {
-                // Check if Google Maps is loaded
+                console.log('Initializing Google Map');
+                
+                // Default location (San Francisco)
+                const defaultLocation = { lat: 37.7749, lng: -122.4194 };
+                
+                // Create map
+                map = new google.maps.Map(document.getElementById('map-container'), {
+                    center: defaultLocation,
+                    zoom: 12,
+                    mapTypeId: 'terrain'
+                });
+                
+                // Create geocoder
+                geocoder = new google.maps.Geocoder();
+                
+                // Add click event to map
+                map.addListener('click', function(event) {
+                    console.log('Map clicked:', event.latLng.toString());
+                    placeMarker(event.latLng);
+                    updateSelectedLocation(event.latLng);
+                    loadSiteData(event.latLng);
+                });
+                
+                // Initialize the search box
+                const input = document.getElementById('address-input');
+                const searchBox = new google.maps.places.SearchBox(input);
+                
+                // Bias the SearchBox results towards current map's viewport
+                map.addListener('bounds_changed', function() {
+                    searchBox.setBounds(map.getBounds());
+                });
+                
+                // Listen for the event fired when the user selects a prediction
+                searchBox.addListener('places_changed', function() {
+                    const places = searchBox.getPlaces();
+                    
+                    if (places.length === 0) {
+                        return;
+                    }
+                    
+                    const place = places[0];
+                    
+                    if (!place.geometry || !place.geometry.location) {
+                        console.log("Returned place contains no geometry");
+                        return;
+                    }
+                    
+                    // Set map view to the selected place
+                    map.setCenter(place.geometry.location);
+                    map.setZoom(15);
+                    
+                    // Place marker
+                    placeMarker(place.geometry.location);
+                    updateSelectedLocation(place.geometry.location);
+                    loadSiteData(place.geometry.location);
+                });
+                
+                // Search button click handler
+                document.getElementById('search-button').addEventListener('click', function() {
+                    const address = document.getElementById('address-input').value;
+                    if (address) {
+                        geocoder.geocode({ 'address': address }, function(results, status) {
+                            if (status === 'OK') {
+                                map.setCenter(results[0].geometry.location);
+                                map.setZoom(15);
+                                placeMarker(results[0].geometry.location);
+                                updateSelectedLocation(results[0].geometry.location);
+                                loadSiteData(results[0].geometry.location);
+                            } else {
+                                alert('Geocode was not successful for the following reason: ' + status);
+                            }
+                        });
+                    }
+                });
+                
+                // Use my location button click handler
+                document.getElementById('use-location-button').addEventListener('click', function() {
+                    if (navigator.geolocation) {
+                        navigator.geolocation.getCurrentPosition(function(position) {
+                            const pos = {
+                                lat: position.coords.latitude,
+                                lng: position.coords.longitude
+                            };
+                            
+                            map.setCenter(pos);
+                            map.setZoom(15);
+                            placeMarker(pos);
+                            updateSelectedLocation(pos);
+                            loadSiteData(pos);
+                        }, function() {
+                            alert('Error: The Geolocation service failed.');
+                        });
+                    } else {
+                        alert('Error: Your browser doesn\'t support geolocation.');
+                    }
+                });
+                
+                // Date selection change handler for sun path
+                document.getElementById('date-select').addEventListener('change', function() {
+                    if (selectedLocation) {
+                        updateSunPath(selectedLocation, this.value);
+                    }
+                });
+                
+                // Set up a default location
+                placeMarker(defaultLocation);
+                updateSelectedLocation(defaultLocation);
+                loadSiteData(defaultLocation);
+                
+                console.log('Map initialization complete');
+            } catch (error) {
+                console.error('Error initializing map:', error);
+                document.getElementById('loading-indicator').classList.add('hidden');
+                alert('Error initializing map. Please check console for details.');
+            }
+        }
+        
+        // Function to place marker on map
+        function placeMarker(location) {
+            try {
+                if (marker) {
+                    marker.setMap(null);
+                }
+                
+                marker = new google.maps.Marker({
+                    position: location,
+                    map: map,
+                    animation: google.maps.Animation.DROP
+                });
+            } catch (error) {
+                console.error('Error placing marker:', error);
+            }
+        }
+        
+        // Function to update selected location display
+        function updateSelectedLocation(location) {
+            selectedLocation = location;
+            
+            try {
+                // Display coordinates while geocoding
+                document.getElementById('selected-location').textContent = 
+                    `Selected Location: (${location.lat().toFixed(5)}, ${location.lng().toFixed(5)})`;
+                
+                // Reverse geocode to get address
+                geocoder.geocode({ 'location': location }, function(results, status) {
+                    if (status === 'OK' && results[0]) {
+                        document.getElementById('selected-location').textContent = 
+                            `Selected Location: ${results[0].formatted_address}`;
+                    }
+                });
+            } catch (error) {
+                console.error('Error updating location display:', error);
+            }
+        }
+        
+        // Function to load site data
+        function loadSiteData(location) {
+            // Show loading indicator
+            document.getElementById('loading-indicator').classList.remove('hidden');
+            
+            // Set a safety timeout to hide the loading indicator
+            ensureLoadingCompletes();
+            
+            try {
+                console.log('Loading data for location:', location.toString());
+                
+                // Update climate data
+                updateClimateData(location);
+                
+                // Update sun path
+                updateSunPath(location, document.getElementById('date-select').value);
+                
+                // Hide loading indicator
+                document.getElementById('loading-indicator').classList.add('hidden');
+            } catch (error) {
+                console.error('Error loading site data:', error);
+                document.getElementById('loading-indicator').classList.add('hidden');
+            }
+        }
+        
+        // Function to update climate data
+        function updateClimateData(location) {
+            try {
+                console.log('Updating climate data');
+                // Simulate climate data - in reality, this would come from an API
+                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                
+                // Generate random temperature data based on location
+                // Using latitude to simulate seasonal variations
+                const lat = location.lat();
+                const tempOffset = (Math.abs(lat) - 30) * 0.5; // Adjust temperatures based on latitude
+                
+                const highTemps = months.map((_, index) => {
+                    const seasonalFactor = Math.sin((index / 12) * 2 * Math.PI);
+                    return Math.round(25 - tempOffset + seasonalFactor * (15 - lat * 0.1));
+                });
+                
+                const lowTemps = months.map((_, index) => {
+                    const seasonalFactor = Math.sin((index / 12) * 2 * Math.PI);
+                    return Math.round(15 - tempOffset + seasonalFactor * (10 - lat * 0.1));
+                });
+                
+                // Generate random rainfall data
+                // Using longitude to simulate different climate patterns
+                const lng = location.lng();
+                const isWesternHemisphere = lng < 0;
+                
+                const rainfall = months.map((_, index) => {
+                    let seasonalFactor;
+                    
+                    if (isWesternHemisphere) {
+                        // Western hemisphere seasonal patterns
+                        if (lat > 0) {
+                            // Northern hemisphere
+                            seasonalFactor = Math.cos((index / 12) * 2 * Math.PI);
+                        } else {
+                            // Southern hemisphere
+                            seasonalFactor = -Math.cos((index / 12) * 2 * Math.PI);
+                        }
+                    } else {
+                        // Eastern hemisphere seasonal patterns
+                        if (lat > 0) {
+                            // Northern hemisphere
+                            seasonalFactor = Math.sin((index / 12) * 2 * Math.PI);
+                        } else {
+                            // Southern hemisphere
+                            seasonalFactor = -Math.sin((index / 12) * 2 * Math.PI);
+                        }
+                    }
+                    
+                    return Math.max(5, Math.round(50 + seasonalFactor * 30 + Math.random() * 20));
+                });
+                
+                // Update chart
+                if (climateChart) {
+                    climateChart.destroy();
+                }
+                
+                const ctx = document.getElementById('climate-chart').getContext('2d');
+                
+                climateChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: months,
+                        datasets: [
+                            {
+                                label: 'High Temp (°C)',
+                                data: highTemps,
+                                backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                                borderColor: 'rgba(255, 99, 132, 1)',
+                                borderWidth: 1,
+                                type: 'line',
+                                yAxisID: 'y'
+                            },
+                            {
+                                label: 'Low Temp (°C)',
+                                data: lowTemps,
+                                backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                                borderColor: 'rgba(54, 162, 235, 1)',
+                                borderWidth: 1,
+                                type: 'line',
+                                yAxisID: 'y'
+                            },
+                            {
+                                label: 'Rainfall (mm)',
+                                data: rainfall,
+                                backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                                borderColor: 'rgba(75, 192, 192, 1)',
+                                borderWidth: 1,
+                                yAxisID: 'y1'
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        interaction: {
+                            mode: 'index',
+                            intersect: false,
+                        },
+                        scales: {
+                            y: {
+                                type: 'linear',
+                                display: true,
+                                position: 'left',
+                                title: {
+                                    display: true,
+                                    text: 'Temperature (°C)'
+                                }
+                            },
+                            y1: {
+                                type: 'linear',
+                                display: true,
+                                position: 'right',
+                                grid: {
+                                    drawOnChartArea: false,
+                                },
+                                title: {
+                                    display: true,
+                                    text: 'Rainfall (mm)'
+                                }
+                            }
+                        }
+                    }
+                });
+                
+                // Update summary data
+                const totalRainfall = rainfall.reduce((sum, val) => sum + val, 0);
+                document.getElementById('avg-rainfall').textContent = `${Math.round(totalRainfall)} mm/year`;
+                
+                const minTemp = Math.min(...lowTemps);
+                const maxTemp = Math.max(...highTemps);
+                document.getElementById('temp-range').textContent = `${minTemp}°C to ${maxTemp}°C`;
+                
+                console.log('Climate data updated successfully');
+            } catch (error) {
+                console.error('Error updating climate data:', error);
+            }
+        }
+        
+        // Function to update sun path
+        function updateSunPath(location, dateCode) {
+            try {
+                console.log('Updating sun path');
+                const sunpathDiagram = document.getElementById('sunpath-diagram');
+                
+                // Make sure we have correct dimensions
+                sunpathDiagram.width = sunpathDiagram.offsetWidth;
+                sunpathDiagram.height = sunpathDiagram.offsetHeight;
+                
+                const ctx = sunpathDiagram.getContext('2d');
+                
+                // Clear the canvas
+                ctx.clearRect(0, 0, sunpathDiagram.width, sunpathDiagram.height);
+                
+                // Set up the diagram
+                const width = sunpathDiagram.width;
+                const height = sunpathDiagram.height;
+                const centerX = width / 2;
+                const centerY = height * 0.7; // Lower the horizon to show more sky
+                const radius = Math.min(width, height) * 0.4;
+                
+                // Draw horizon line
+                ctx.beginPath();
+                ctx.moveTo(0, centerY);
+                ctx.lineTo(width, centerY);
+                ctx.strokeStyle = isDarkMode() ? '#666' : '#aaa';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                // Draw compass points
+                const compassPoints = [
+                    { label: 'N', angle: 0 },
+                    { label: 'E', angle: Math.PI * 0.5 },
+                    { label: 'S', angle: Math.PI },
+                    { label: 'W', angle: Math.PI * 1.5 }
+                ];
+                
+                ctx.font = '14px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillStyle = isDarkMode() ? '#ddd' : '#333';
+                
+                compassPoints.forEach(point => {
+                    const x = centerX + Math.sin(point.angle) * (radius + 20);
+                    const y = centerY - Math.cos(point.angle) * (radius + 20);
+                    ctx.fillText(point.label, x, y);
+                });
+                
+                // Calculate sun path for the selected date
+                let season = 'winter';
+                if (dateCode === '0321' || dateCode === '0921') {
+                    season = 'equinox';
+                } else if (dateCode === '0621') {
+                    season = 'summer';
+                }
+                
+                // Adjust path based on latitude
+                const latitude = location.lat();
+                const isNorthernHemisphere = latitude >= 0;
+                let maxAltitude;
+                
+                if (season === 'winter') {
+                    maxAltitude = Math.max(0.1, 0.5 - Math.abs(latitude) / 90);
+                    if (!isNorthernHemisphere) maxAltitude = 0.8 - maxAltitude;
+                } else if (season === 'equinox') {
+                    maxAltitude = 0.5;
+                } else { // summer
+                    maxAltitude = Math.min(0.9, 0.5 + Math.abs(latitude) / 90);
+                    if (!isNorthernHemisphere) maxAltitude = 0.8 - maxAltitude;
+                }
+                
+                // Draw sun path arc
+                ctx.beginPath();
+                
+                // Create an arc from east to west
+                // We'll simulate the sun path as a half-circle, adjusted for season and latitude
+                ctx.moveTo(centerX - radius, centerY); // Starting at the west point
+                
+                // Draw the sun path
+                for (let angle = -Math.PI; angle <= 0; angle += 0.01) {
+                    const x = centerX + Math.sin(angle) * radius;
+                    const y = centerY - Math.cos(angle) * radius * maxAltitude;
+                    
+                    if (angle === -Math.PI) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                }
+                
+                ctx.strokeStyle = isDarkMode() ? '#ffa500' : '#ff6600';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+                
+                // Draw sun positions at different times
+                const sunPositions = [
+                    { time: 'Sunrise', angle: -Math.PI },
+                    { time: '10:00', angle: -Math.PI * 0.75 },
+                    { time: 'Noon', angle: -Math.PI * 0.5 },
+                    { time: '15:00', angle: -Math.PI * 0.25 },
+                    { time: 'Sunset', angle: 0 }
+                ];
+                
+                sunPositions.forEach(pos => {
+                    const x = centerX + Math.sin(pos.angle) * radius;
+                    const y = centerY - Math.cos(pos.angle) * radius * maxAltitude;
+                    
+                    // Draw sun
+                    ctx.beginPath();
+                    ctx.arc(x, y, 8, 0, Math.PI * 2);
+                    ctx.fillStyle = isDarkMode() ? '#ffcc00' : '#ffaa00';
+                    ctx.fill();
+                    
+                    // Draw time label
+                    ctx.fillStyle = isDarkMode() ? '#ddd' : '#333';
+                    ctx.fillText(pos.time, x, y + 20);
+                });
+                
+                console.log('Sun path updated successfully');
+            } catch (error) {
+                console.error('Error updating sun path:', error);
+            }
+        }
+        
+        // Helper function to check if dark mode is active
+        function isDarkMode() {
+            return document.documentElement.classList.contains('dark');
+        }
+        
+        // Check if Google Maps API is loaded, then initialize
+        function initializeApp() {
+            console.log('Checking if Google Maps API is loaded');
+            try {
                 if (typeof google === 'undefined' || typeof google.maps === 'undefined') {
                     console.log('Google Maps API not yet loaded, waiting...');
                     setTimeout(initializeApp, 1000);
                     return;
                 }
                 
-                console.log('Initializing app with Google Maps');
+                console.log('Google Maps API loaded, initializing app');
                 initMap();
-                
-                // Set up a simple location for immediate testing
-                const defaultLocation = new google.maps.LatLng(37.7749, -122.4194);
-                placeMarker(defaultLocation);
-                updateSelectedLocation(defaultLocation);
-                loadSiteData(defaultLocation);
-                
-                // Ensure loading doesn't get stuck
-                ensureLoadingCompletes();
             } catch (error) {
-                console.error('Error initializing app:', error);
+                console.error('Error checking Google Maps API:', error);
                 document.getElementById('loading-indicator').classList.add('hidden');
+                alert('Error loading Google Maps. Please refresh the page.');
             }
         }
         
-        // Initialize the app when the page loads
-        window.onload = function() {
-            console.log('Window loaded, initializing app');
-            setTimeout(initializeApp, 500);
-        };
-    </script>
-</body>
-</html>
+        // Initialize the
