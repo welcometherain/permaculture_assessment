@@ -6,7 +6,7 @@
     <title>Permaculture Site Analysis</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA-73x_CaXwpix7-5JpLmb3C0lmA9uEKRs&libraries=places"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAuFONHLyXGalqEH9VL3oFl8MpHgF7sa5k&libraries=places" async defer></script>
     <script src="https://unpkg.com/jspdf@latest/dist/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <style>
@@ -477,29 +477,33 @@
             
             // Simulate API call delay
             setTimeout(() => {
-                // Climate data
-                updateClimateData(location);
-                
-                // Soil data
-                updateSoilData(location);
-                
-                // Topography data
-                updateTopographyData(location);
-                
-                // Sun path
-                updateSunPath(location, document.getElementById('date-select').value);
-                
-                // Water flow
-                updateWaterFlowData(location);
-                
-                // Native plants
-                updateNativePlantsData(location);
-                
-                // Fire risk
-                updateFireRiskData(location);
-                
-                // Hide loading indicator
-                document.getElementById('loading-indicator').classList.add('hidden');
+                try {
+                    // Climate data
+                    updateClimateData(location);
+                    
+                    // Soil data
+                    updateSoilData(location);
+                    
+                    // Topography data
+                    updateTopographyData(location);
+                    
+                    // Sun path
+                    updateSunPath(location, document.getElementById('date-select').value);
+                    
+                    // Water flow
+                    updateWaterFlowData(location);
+                    
+                    // Native plants
+                    updateNativePlantsData(location);
+                    
+                    // Fire risk
+                    updateFireRiskData(location);
+                } catch (error) {
+                    console.error("Error loading site data:", error);
+                } finally {
+                    // Always hide loading indicator even if there's an error
+                    document.getElementById('loading-indicator').classList.add('hidden');
+                }
             }, 1500);
         }
         
@@ -762,6 +766,9 @@
         // Function to update sun path
         function updateSunPath(location, dateCode) {
             const sunpathDiagram = document.getElementById('sunpath-diagram');
+            // Make sure we have correct dimensions
+            sunpathDiagram.width = sunpathDiagram.offsetWidth;
+            sunpathDiagram.height = sunpathDiagram.offsetHeight;
             const ctx = sunpathDiagram.getContext('2d');
             
             // Clear the canvas
@@ -1289,9 +1296,48 @@
             return document.documentElement.classList.contains('dark');
         }
         
+        // Make sure we don't get stuck in loading state
+        function ensureLoadingCompletes() {
+            setTimeout(() => {
+                const loadingIndicator = document.getElementById('loading-indicator');
+                if (!loadingIndicator.classList.contains('hidden')) {
+                    console.log('Forcing loading indicator to hide after timeout');
+                    loadingIndicator.classList.add('hidden');
+                }
+            }, 10000); // Force hide after 10 seconds if something gets stuck
+        }
+        
+        // Initialize the map when the Google Maps API is loaded
+        function initializeApp() {
+            try {
+                // Check if Google Maps is loaded
+                if (typeof google === 'undefined' || typeof google.maps === 'undefined') {
+                    console.log('Google Maps API not yet loaded, waiting...');
+                    setTimeout(initializeApp, 1000);
+                    return;
+                }
+                
+                console.log('Initializing app with Google Maps');
+                initMap();
+                
+                // Set up a simple location for immediate testing
+                const defaultLocation = new google.maps.LatLng(37.7749, -122.4194);
+                placeMarker(defaultLocation);
+                updateSelectedLocation(defaultLocation);
+                loadSiteData(defaultLocation);
+                
+                // Ensure loading doesn't get stuck
+                ensureLoadingCompletes();
+            } catch (error) {
+                console.error('Error initializing app:', error);
+                document.getElementById('loading-indicator').classList.add('hidden');
+            }
+        }
+        
         // Initialize the app when the page loads
         window.onload = function() {
-            initMap();
+            console.log('Window loaded, initializing app');
+            setTimeout(initializeApp, 500);
         };
     </script>
 </body>
