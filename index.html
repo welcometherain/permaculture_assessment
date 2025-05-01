@@ -32,6 +32,45 @@
             justify-content: center;
             align-items: center;
         }
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #5D5CDE;
+        }
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
     </style>
 </head>
 <body class="bg-gray-100 p-4">
@@ -55,7 +94,17 @@
         
         <!-- Climate Section -->
         <div class="bg-white rounded-lg shadow p-4 mb-6">
-            <h2 class="text-xl font-semibold mb-2">Climate Data</h2>
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-semibold">Climate Data</h2>
+                <div class="flex items-center">
+                    <span class="mr-2">Metric</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="unit-toggle">
+                        <span class="slider"></span>
+                    </label>
+                    <span class="ml-2">Imperial</span>
+                </div>
+            </div>
             <div id="climate-chart-container">
                 <canvas id="climate-chart"></canvas>
             </div>
@@ -81,6 +130,14 @@
     </div>
 
     <script>
+        // Global variables
+        let map;
+        let marker;
+        let currentLocation = { lat: 37.7749, lng: -122.4194 }; // San Francisco default
+        let isImperial = false;
+        let climateData = null;
+        let currentAddress = "San Francisco, CA";
+        
         // Debug logging function
         function debug(message) {
             console.log(message);
@@ -96,10 +153,24 @@
             document.getElementById('loading').style.display = 'none';
         }
         
+        // Function to show loading indicator
+        function showLoading() {
+            document.getElementById('loading').style.display = 'flex';
+        }
+        
         // Cancel loading button
         document.getElementById('cancel-loading').addEventListener('click', function() {
             hideLoading();
             debug("Loading cancelled by user");
+        });
+        
+        // Unit toggle event listener
+        document.getElementById('unit-toggle').addEventListener('change', function() {
+            isImperial = this.checked;
+            debug(`Units changed to ${isImperial ? 'Imperial' : 'Metric'}`);
+            if (climateData) {
+                updateClimateChart(climateData);
+            }
         });
         
         // Global variable to track map loading
@@ -153,8 +224,8 @@
                 // Initialize map
                 initMap();
                 
-                // Create climate chart
-                createClimateChart();
+                // Load initial climate data for San Francisco
+                await fetchClimateData(currentLocation.lat, currentLocation.lng);
                 
                 // Hide loading indicator
                 hideLoading();
@@ -171,12 +242,9 @@
             try {
                 debug("Initializing map...");
                 
-                // Default location (San Francisco)
-                const sfLatLng = { lat: 37.7749, lng: -122.4194 };
-                
                 // Create the map
-                const map = new google.maps.Map(document.getElementById('map-container'), {
-                    center: sfLatLng,
+                map = new google.maps.Map(document.getElementById('map-container'), {
+                    center: currentLocation,
                     zoom: 12,
                     mapTypeId: google.maps.MapTypeId.TERRAIN,
                     mapTypeControl: true
@@ -185,33 +253,57 @@
                 debug("Map created successfully");
                 
                 // Create a marker
-                const marker = new google.maps.Marker({
-                    position: sfLatLng,
+                marker = new google.maps.Marker({
+                    position: currentLocation,
                     map: map,
-                    title: 'San Francisco'
+                    title: currentAddress
                 });
                 
+                // Create geocoder for reverse geocoding
+                const geocoder = new google.maps.Geocoder();
+                
                 // Add click event to map
-                map.addListener('click', function(event) {
-                    // Clear previous marker
-                    if (marker) {
-                        marker.setMap(null);
-                    }
+                map.addListener('click', async function(event) {
+                    showLoading();
                     
-                    // Create new marker
+                    // Update marker
                     marker.setPosition(event.latLng);
-                    marker.setMap(map);
                     
                     // Get coordinates
                     const lat = event.latLng.lat();
                     const lng = event.latLng.lng();
+                    currentLocation = { lat, lng };
                     
-                    debug(`Map clicked at: ${lat.toFixed(4)}, ${lng.toFixed(4)}`);
-                    document.getElementById('selected-location').textContent = 
-                        `Selected Location: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+                    debug(`Map clicked at: ${lat.toFixed(6)}, ${lng.toFixed(6)}`);
                     
-                    // Generate new climate data based on location
-                    updateClimateData(lat, lng);
+                    // Perform reverse geocoding
+                    try {
+                        const result = await new Promise((resolve, reject) => {
+                            geocoder.geocode({ location: event.latLng }, (results, status) => {
+                                if (status === "OK" && results[0]) {
+                                    resolve(results[0].formatted_address);
+                                } else {
+                                    reject(new Error("Geocoding failed"));
+                                }
+                            });
+                        });
+                        
+                        currentAddress = result;
+                        document.getElementById('selected-location').textContent = 
+                            `Selected Location: ${currentAddress}`;
+                    } catch (error) {
+                        document.getElementById('selected-location').textContent = 
+                            `Selected Location: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+                    }
+                    
+                    // Fetch climate data for this location
+                    try {
+                        await fetchClimateData(lat, lng);
+                    } catch (error) {
+                        debug(`ERROR fetching climate data: ${error.message}`);
+                    }
+                    
+                    hideLoading();
                 });
                 
                 debug("Map initialization completed");
@@ -220,131 +312,240 @@
             }
         }
         
-        // Create climate chart with default data
-        function createClimateChart() {
-            debug("Creating climate chart...");
+        // Fetch climate data from Visual Crossing Weather API
+        async function fetchClimateData(lat, lng) {
+            debug(`Fetching climate data for ${lat.toFixed(6)}, ${lng.toFixed(6)}...`);
             
             try {
-                // San Francisco data (default)
-                updateClimateData(37.7749, -122.4194);
-                debug("Climate chart created successfully");
+                // Using the DarkSky Visual Crossing historical monthly normals API
+                // This is simulated as we don't have an actual API key
+                
+                // For demo purposes, we'll generate somewhat realistic data based on location
+                const months = ['January', 'February', 'March', 'April', 'May', 'June', 
+                               'July', 'August', 'September', 'October', 'November', 'December'];
+                
+                // Northern/southern hemisphere seasonal adjustment
+                const isNorthern = lat > 0;
+                const absLat = Math.abs(lat);
+                
+                // Base temperature depends on latitude (equator is warmer)
+                const equatorFactor = Math.cos((absLat * Math.PI) / 180);
+                const baseTemp = 20 * equatorFactor + 5;
+                
+                // Temperature variation increases with distance from equator
+                const tempVariation = 5 + 15 * (1 - equatorFactor);
+                
+                // Elevation affects temperature (rough approximation)
+                const elevationFactor = 1.0; // In a real app, we would get elevation data
+                
+                // Coastal vs continental climate
+                const isCoastal = (Math.abs(lng) > 170 || // Far eastern or western longitudes
+                                 Math.abs(lng - 10) < 20 || // Near Greenwich
+                                 Math.abs(lng - 130) < 20 || // Pacific coast
+                                 Math.abs(lng + 70) < 20);  // Atlantic coast
+                                 
+                const tempModeration = isCoastal ? 0.7 : 1.0; // Coastal areas have moderated temperatures
+                
+                // Monthly data generation
+                const monthlyData = months.map((month, index) => {
+                    // Seasonal offset (0-11) -> radians, adjusted for hemisphere
+                    const seasonalOffset = ((index + (isNorthern ? 6 : 0)) % 12) / 12 * 2 * Math.PI;
+                    
+                    // Temperature calculation using seasonal sine wave
+                    const seasonalFactor = Math.sin(seasonalOffset);
+                    const avgTemp = baseTemp + seasonalFactor * tempVariation * tempModeration * elevationFactor;
+                    const maxTemp = avgTemp + 5 * tempModeration;
+                    const minTemp = avgTemp - 5 * tempModeration;
+                    
+                    // Rainfall depends on location factors
+                    // Equatorial regions generally have more rainfall
+                    const rainfallBase = 50 + 100 * Math.pow(equatorFactor, 2);
+                    
+                    // Rainfall seasonality varies by latitude and geography
+                    let rainfallFactor;
+                    
+                    if (absLat < 10) { // Equatorial - rain year round
+                        rainfallFactor = 0.8 + 0.4 * Math.sin(seasonalOffset * 2);
+                    } else if (absLat < 30) { // Tropical - monsoon pattern
+                        rainfallFactor = 0.3 + 0.7 * (1 + Math.sin(seasonalOffset)) / 2;
+                    } else if (absLat < 60) { // Temperate - moderate seasonal variation
+                        rainfallFactor = 0.5 + 0.5 * Math.sin(seasonalOffset);
+                    } else { // Polar - generally drier
+                        rainfallFactor = 0.3 + 0.3 * Math.sin(seasonalOffset);
+                    }
+                    
+                    // Coastal areas often have more precipitation
+                    const coastalRainFactor = isCoastal ? 1.3 : 1.0;
+                    
+                    // Calculate precipitation
+                    const precipitation = rainfallBase * rainfallFactor * coastalRainFactor;
+                    
+                    return {
+                        month: month,
+                        month_short: month.substring(0, 3),
+                        avg_temp_c: avgTemp.toFixed(1),
+                        max_temp_c: maxTemp.toFixed(1),
+                        min_temp_c: minTemp.toFixed(1),
+                        precipitation_mm: precipitation.toFixed(1)
+                    };
+                });
+                
+                // Calculate annual statistics
+                const annualRainfall = monthlyData.reduce((sum, month) => 
+                    sum + parseFloat(month.precipitation_mm), 0).toFixed(0);
+                
+                const minTemp = Math.min(...monthlyData.map(m => parseFloat(m.min_temp_c))).toFixed(1);
+                const maxTemp = Math.max(...monthlyData.map(m => parseFloat(m.max_temp_c))).toFixed(1);
+                
+                // Compile full climate data object
+                climateData = {
+                    location: {
+                        latitude: lat,
+                        longitude: lng,
+                        address: currentAddress
+                    },
+                    annual: {
+                        rainfall_mm: annualRainfall,
+                        min_temp_c: minTemp,
+                        max_temp_c: maxTemp
+                    },
+                    monthly: monthlyData
+                };
+                
+                debug(`Climate data generated successfully`);
+                
+                // Update the chart and stats
+                updateClimateChart(climateData);
+                
             } catch (error) {
-                debug(`ERROR creating climate chart: ${error.message}`);
+                debug(`ERROR: Climate data fetch failed - ${error.message}`);
+                throw error;
             }
         }
         
-        // Update climate data based on latitude/longitude
-        function updateClimateData(lat, lng) {
-            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        // Update climate chart with data
+        function updateClimateChart(data) {
+            debug("Updating climate chart...");
             
-            // Generate seasonal data based on latitude (northern/southern hemisphere)
-            const isNorthern = lat > 0;
-            const absLat = Math.abs(lat);
-            const latFactor = Math.min(absLat / 90, 1);
-            
-            // Temperature variation increases with distance from equator
-            const tempVariation = 5 + 20 * latFactor;
-            const baseTemp = 20 - 10 * latFactor;
-            
-            // Generate data with seasonal variations
-            const highTemps = months.map((_, index) => {
-                // Seasonal offset (0-11) -> radians
-                const seasonalOffset = ((index + (isNorthern ? 0 : 6)) % 12) / 12 * 2 * Math.PI;
-                // Sin wave for seasonal variation
-                const seasonalFactor = Math.sin(seasonalOffset);
-                return Math.round(baseTemp + seasonalFactor * tempVariation);
-            });
-            
-            const lowTemps = highTemps.map(temp => Math.round(temp - 5 - 5 * latFactor));
-            
-            // Rainfall depends on longitude (rough approximation)
-            const isCoastal = Math.abs(lng) > 120 || Math.abs(lng) < 30;
-            const rainfallBase = isCoastal ? 80 : 40;
-            const rainfallVariation = isCoastal ? 100 : 50;
-            
-            const rainfall = months.map((_, index) => {
-                const seasonalOffset = ((index + (isNorthern ? 0 : 6)) % 12) / 12 * 2 * Math.PI;
-                const seasonalFactor = (Math.sin(seasonalOffset) + 1) / 2; // 0 to 1
-                return Math.round(rainfallBase + seasonalFactor * rainfallVariation);
-            });
-            
-            // Update chart
-            const ctx = document.getElementById('climate-chart').getContext('2d');
-            
-            // Check if there's an existing chart and destroy it
-            if (window.climateChart) {
-                window.climateChart.destroy();
-            }
-            
-            // Create new chart
-            window.climateChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: months,
-                    datasets: [
-                        {
-                            label: 'High Temp (°C)',
-                            data: highTemps,
-                            borderColor: 'rgba(255, 99, 132, 1)',
-                            backgroundColor: 'rgba(255, 99, 132, 0.5)',
-                            type: 'line',
-                            yAxisID: 'y'
-                        },
-                        {
-                            label: 'Low Temp (°C)',
-                            data: lowTemps,
-                            borderColor: 'rgba(54, 162, 235, 1)',
-                            backgroundColor: 'rgba(54, 162, 235, 0.5)',
-                            type: 'line',
-                            yAxisID: 'y'
-                        },
-                        {
-                            label: 'Rainfall (mm)',
-                            data: rainfall,
-                            backgroundColor: 'rgba(75, 192, 192, 0.5)',
-                            yAxisID: 'y1'
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    interaction: {
-                        mode: 'index',
-                        intersect: false,
-                    },
-                    scales: {
-                        y: {
-                            type: 'linear',
-                            display: true,
-                            position: 'left',
-                            title: {
-                                display: true,
-                                text: 'Temperature (°C)'
-                            }
-                        },
-                        y1: {
-                            type: 'linear',
-                            display: true,
-                            position: 'right',
-                            grid: {
-                                drawOnChartArea: false,
+            try {
+                const ctx = document.getElementById('climate-chart').getContext('2d');
+                
+                // Convert data to appropriate units
+                const months = data.monthly.map(m => m.month_short);
+                
+                let highTemps, lowTemps, rainfall, tempUnit, rainfallUnit;
+                
+                if (isImperial) {
+                    // Convert to imperial units (°F and inches)
+                    highTemps = data.monthly.map(m => celsiusToFahrenheit(parseFloat(m.max_temp_c)));
+                    lowTemps = data.monthly.map(m => celsiusToFahrenheit(parseFloat(m.min_temp_c)));
+                    rainfall = data.monthly.map(m => mmToInches(parseFloat(m.precipitation_mm)));
+                    tempUnit = '°F';
+                    rainfallUnit = 'in';
+                } else {
+                    // Use metric units (°C and mm)
+                    highTemps = data.monthly.map(m => parseFloat(m.max_temp_c));
+                    lowTemps = data.monthly.map(m => parseFloat(m.min_temp_c));
+                    rainfall = data.monthly.map(m => parseFloat(m.precipitation_mm));
+                    tempUnit = '°C';
+                    rainfallUnit = 'mm';
+                }
+                
+                // Destroy previous chart if it exists
+                if (window.climateChart) {
+                    window.climateChart.destroy();
+                }
+                
+                // Create new chart
+                window.climateChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: months,
+                        datasets: [
+                            {
+                                label: `High Temp (${tempUnit})`,
+                                data: highTemps,
+                                borderColor: 'rgba(255, 99, 132, 1)',
+                                backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                                type: 'line',
+                                yAxisID: 'y'
                             },
-                            title: {
+                            {
+                                label: `Low Temp (${tempUnit})`,
+                                data: lowTemps,
+                                borderColor: 'rgba(54, 162, 235, 1)',
+                                backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                                type: 'line',
+                                yAxisID: 'y'
+                            },
+                            {
+                                label: `Rainfall (${rainfallUnit})`,
+                                data: rainfall,
+                                backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                                yAxisID: 'y1'
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        interaction: {
+                            mode: 'index',
+                            intersect: false,
+                        },
+                        scales: {
+                            y: {
+                                type: 'linear',
                                 display: true,
-                                text: 'Rainfall (mm)'
+                                position: 'left',
+                                title: {
+                                    display: true,
+                                    text: `Temperature (${tempUnit})`
+                                }
+                            },
+                            y1: {
+                                type: 'linear',
+                                display: true,
+                                position: 'right',
+                                grid: {
+                                    drawOnChartArea: false,
+                                },
+                                title: {
+                                    display: true,
+                                    text: `Rainfall (${rainfallUnit})`
+                                }
                             }
                         }
                     }
+                });
+                
+                // Update summary data
+                let annualRainfall, minTemp, maxTemp;
+                
+                if (isImperial) {
+                    annualRainfall = mmToInches(parseFloat(data.annual.rainfall_mm)).toFixed(1);
+                    minTemp = celsiusToFahrenheit(parseFloat(data.annual.min_temp_c)).toFixed(1);
+                    maxTemp = celsiusToFahrenheit(parseFloat(data.annual.max_temp_c)).toFixed(1);
+                    
+                    document.getElementById('avg-rainfall').textContent = `${annualRainfall} in/year`;
+                    document.getElementById('temp-range').textContent = `${minTemp}°F to ${maxTemp}°F`;
+                } else {
+                    document.getElementById('avg-rainfall').textContent = `${data.annual.rainfall_mm} mm/year`;
+                    document.getElementById('temp-range').textContent = `${data.annual.min_temp_c}°C to ${data.annual.max_temp_c}°C`;
                 }
-            });
-            
-            // Update summary data
-            const totalRainfall = rainfall.reduce((sum, val) => sum + val, 0);
-            document.getElementById('avg-rainfall').textContent = `${totalRainfall} mm/year`;
-            
-            const minTemp = Math.min(...lowTemps);
-            const maxTemp = Math.max(...highTemps);
-            document.getElementById('temp-range').textContent = `${minTemp}°C to ${maxTemp}°C`;
+                
+                debug("Climate chart updated successfully");
+            } catch (error) {
+                debug(`ERROR updating climate chart: ${error.message}`);
+            }
+        }
+        
+        // Unit conversion functions
+        function celsiusToFahrenheit(celsius) {
+            return (celsius * 9/5) + 32;
+        }
+        
+        function mmToInches(mm) {
+            return mm / 25.4;
         }
         
         // Start app when page is loaded
