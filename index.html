@@ -3,29 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple Permaculture Analysis</title>
+    <title>Simplified Permaculture Analysis</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAuFONHLyXGalqEH9VL3oFl8MpHgF7sa5k&libraries=places" async defer></script>
+    <!-- Loading Google Maps API synchronously to ensure it's available -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAuFONHLyXGalqEH9VL3oFl8MpHgF7sa5k&libraries=places"></script>
     <style>
-        /* Dark mode support */
-        .dark {
-            background-color: #181818;
-            color: #e2e8f0;
-        }
-        .dark .card {
-            background-color: #2d3748;
-            color: #e2e8f0;
-        }
-        #sunpath-diagram {
-            width: 100%;
-            height: 200px;
-            position: relative;
-        }
-        #climate-chart {
-            max-width: 100%;
-            height: 250px;
-        }
         #loading-indicator {
             position: fixed;
             top: 0;
@@ -38,110 +21,115 @@
             align-items: center;
             z-index: 1000;
         }
+        .dark {
+            background-color: #181818;
+            color: #e2e8f0;
+        }
+        #sunpath-diagram {
+            width: 100%;
+            height: 200px;
+        }
+        #climate-chart {
+            max-width: 100%;
+            height: 250px;
+        }
     </style>
-    <script>
-        // Configure Tailwind for dark mode
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#5D5CDE',
-                    }
-                },
-            },
-        }
-        
-        // Check for dark mode preference
-        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            document.documentElement.classList.add('dark');
-        }
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
-            if (event.matches) {
-                document.documentElement.classList.add('dark');
-            } else {
-                document.documentElement.classList.remove('dark');
-            }
-        });
-    </script>
 </head>
-<body class="bg-gray-100 dark:bg-gray-900 min-h-screen">
+<body class="bg-gray-100 min-h-screen">
     <div id="loading-indicator" class="hidden">
-        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg text-center">
-            <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto"></div>
-            <p class="mt-4 text-gray-800 dark:text-gray-200">Loading site data...</p>
+        <div class="bg-white p-6 rounded-lg shadow-lg text-center">
+            <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600 mx-auto"></div>
+            <p class="mt-4 text-gray-800">Loading data...</p>
+            <button id="cancel-loading" class="mt-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">Cancel Loading</button>
         </div>
     </div>
 
-    <header class="bg-white dark:bg-gray-800 shadow">
+    <header class="bg-white shadow">
         <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
-                Simple Permaculture Site Analysis
-            </h1>
+            <h1 class="text-2xl font-bold text-gray-900">Simplified Permaculture Analysis</h1>
+            <p class="text-gray-600">Map, Climate Data, and Sun Analysis</p>
         </div>
     </header>
 
     <main class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         <!-- Map Section -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
-            <h2 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Select Your Location</h2>
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4 text-gray-800">Select Your Location</h2>
             
             <div class="flex flex-col md:flex-row gap-4 mb-4">
                 <div class="flex-grow">
-                    <input id="address-input" type="text" placeholder="Enter an address" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-base dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary">
+                    <input id="address-input" type="text" placeholder="Enter an address" class="w-full px-4 py-2 border border-gray-300 rounded-md text-base focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
-                <button id="search-button" class="px-6 py-2 bg-primary text-white rounded-md hover:bg-opacity-90 transition">Search</button>
-                <button id="use-location-button" class="px-6 py-2 bg-gray-600 text-white rounded-md hover:bg-opacity-90 transition">Use My Location</button>
+                <button id="search-button" class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">Search</button>
+                <button id="use-location-button" class="px-6 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition">Use My Location</button>
             </div>
             
-            <div id="map-container" class="h-96 rounded-lg overflow-hidden"></div>
+            <div id="map-container" class="h-96 rounded-lg overflow-hidden border border-gray-300"></div>
             
             <div class="mt-4">
-                <p id="selected-location" class="text-gray-600 dark:text-gray-300">No location selected. Please search or click on the map.</p>
+                <p id="selected-location" class="text-gray-600">No location selected. Please search or click on the map.</p>
             </div>
         </div>
 
         <!-- Climate Section -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6 card">
-            <h2 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white">
-                Climate History (30-Year)
-            </h2>
-            <div>
-                <canvas id="climate-chart"></canvas>
-            </div>
-            <div class="grid grid-cols-2 gap-4 mt-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div id="climate-section" class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-xl font-semibold mb-4 text-gray-800">Climate History (30-Year)</h2>
                 <div>
-                    <h3 class="font-medium text-gray-700 dark:text-gray-300">Average Annual Rainfall</h3>
-                    <p id="avg-rainfall" class="text-2xl font-bold text-primary">--</p>
+                    <canvas id="climate-chart"></canvas>
                 </div>
-                <div>
-                    <h3 class="font-medium text-gray-700 dark:text-gray-300">Temperature Range</h3>
-                    <p id="temp-range" class="text-2xl font-bold text-primary">--</p>
+                <div class="grid grid-cols-2 gap-4 mt-4">
+                    <div>
+                        <h3 class="font-medium text-gray-700">Annual Rainfall</h3>
+                        <p id="avg-rainfall" class="text-2xl font-bold text-blue-600">--</p>
+                    </div>
+                    <div>
+                        <h3 class="font-medium text-gray-700">Temperature Range</h3>
+                        <p id="temp-range" class="text-2xl font-bold text-blue-600">--</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sun Path Section -->
+            <div id="sunpath-section" class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-xl font-semibold mb-4 text-gray-800">Sun Path Analysis</h2>
+                <div id="sunpath-diagram" class="bg-gray-200 rounded-lg relative overflow-hidden">
+                    <!-- Sun path visualization will go here -->
+                </div>
+                <div class="mt-4">
+                    <label for="date-select" class="block text-gray-700 mb-2">Select Date:</label>
+                    <select id="date-select" class="w-full px-4 py-2 border border-gray-300 rounded-md">
+                        <option value="0321">March 21 (Spring Equinox)</option>
+                        <option value="0621">June 21 (Summer Solstice)</option>
+                        <option value="0921">September 21 (Fall Equinox)</option>
+                        <option value="1221">December 21 (Winter Solstice)</option>
+                    </select>
                 </div>
             </div>
         </div>
-
-        <!-- Sun Path Section -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6 card">
-            <h2 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white">
-                Sun Path Analysis
-            </h2>
-            <div id="sunpath-diagram" class="bg-gray-200 dark:bg-gray-700 rounded-lg relative overflow-hidden">
-                <!-- Sun path visualization will go here -->
-            </div>
-            <div class="mt-4">
-                <label for="date-select" class="block text-gray-700 dark:text-gray-300 mb-2">Select Date:</label>
-                <select id="date-select" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-base dark:bg-gray-700 dark:text-white">
-                    <option value="0321">March 21 (Spring Equinox)</option>
-                    <option value="0621">June 21 (Summer Solstice)</option>
-                    <option value="0921">September 21 (Fall Equinox)</option>
-                    <option value="1221">December 21 (Winter Solstice)</option>
-                </select>
+        
+        <div class="bg-gray-200 p-4 rounded-lg mb-6">
+            <h3 class="font-medium text-gray-800">Debug Information</h3>
+            <div id="debug-info" class="text-sm text-gray-600 mt-2">
+                Application initialized. Waiting for user input.
             </div>
         </div>
     </main>
     
     <script>
+        // Utility function to log and show debug info
+        function debugLog(message) {
+            console.log(message);
+            const debugInfo = document.getElementById('debug-info');
+            debugInfo.innerHTML = message + '<br>' + debugInfo.innerHTML;
+        }
+        
+        // Cancel loading button
+        document.getElementById('cancel-loading').addEventListener('click', function() {
+            document.getElementById('loading-indicator').classList.add('hidden');
+            debugLog('Loading cancelled by user');
+        });
+
         // Global variables
         let map;
         let marker;
@@ -149,21 +137,10 @@
         let selectedLocation = null;
         let climateChart = null;
         
-        // Force hide loading indicator after timeout
-        function ensureLoadingCompletes() {
-            setTimeout(() => {
-                const loadingIndicator = document.getElementById('loading-indicator');
-                if (!loadingIndicator.classList.contains('hidden')) {
-                    console.log('Forcing loading indicator to hide after timeout');
-                    loadingIndicator.classList.add('hidden');
-                }
-            }, 5000);
-        }
-        
         // Initialize map
         function initMap() {
             try {
-                console.log('Initializing Google Map');
+                debugLog('Initializing map...');
                 
                 // Default location (San Francisco)
                 const defaultLocation = { lat: 37.7749, lng: -122.4194 };
@@ -172,15 +149,18 @@
                 map = new google.maps.Map(document.getElementById('map-container'), {
                     center: defaultLocation,
                     zoom: 12,
-                    mapTypeId: 'terrain'
+                    mapTypeId: 'terrain',
+                    mapTypeControl: true
                 });
+                
+                debugLog('Map created successfully');
                 
                 // Create geocoder
                 geocoder = new google.maps.Geocoder();
                 
                 // Add click event to map
                 map.addListener('click', function(event) {
-                    console.log('Map clicked:', event.latLng.toString());
+                    debugLog('Map clicked at: ' + event.latLng.toString());
                     placeMarker(event.latLng);
                     updateSelectedLocation(event.latLng);
                     loadSiteData(event.latLng);
@@ -200,15 +180,18 @@
                     const places = searchBox.getPlaces();
                     
                     if (places.length === 0) {
+                        debugLog('No places found');
                         return;
                     }
                     
                     const place = places[0];
                     
                     if (!place.geometry || !place.geometry.location) {
-                        console.log("Returned place contains no geometry");
+                        debugLog('Returned place contains no geometry');
                         return;
                     }
+                    
+                    debugLog('Place found: ' + place.name);
                     
                     // Set map view to the selected place
                     map.setCenter(place.geometry.location);
@@ -223,15 +206,19 @@
                 // Search button click handler
                 document.getElementById('search-button').addEventListener('click', function() {
                     const address = document.getElementById('address-input').value;
+                    debugLog('Searching for address: ' + address);
+                    
                     if (address) {
                         geocoder.geocode({ 'address': address }, function(results, status) {
                             if (status === 'OK') {
+                                debugLog('Address found: ' + results[0].formatted_address);
                                 map.setCenter(results[0].geometry.location);
                                 map.setZoom(15);
                                 placeMarker(results[0].geometry.location);
                                 updateSelectedLocation(results[0].geometry.location);
                                 loadSiteData(results[0].geometry.location);
                             } else {
+                                debugLog('Geocode was not successful: ' + status);
                                 alert('Geocode was not successful for the following reason: ' + status);
                             }
                         });
@@ -240,6 +227,8 @@
                 
                 // Use my location button click handler
                 document.getElementById('use-location-button').addEventListener('click', function() {
+                    debugLog('Requesting user location...');
+                    
                     if (navigator.geolocation) {
                         navigator.geolocation.getCurrentPosition(function(position) {
                             const pos = {
@@ -247,36 +236,42 @@
                                 lng: position.coords.longitude
                             };
                             
+                            debugLog('User location found: ' + pos.lat + ', ' + pos.lng);
+                            
                             map.setCenter(pos);
                             map.setZoom(15);
                             placeMarker(pos);
                             updateSelectedLocation(pos);
                             loadSiteData(pos);
-                        }, function() {
-                            alert('Error: The Geolocation service failed.');
+                        }, function(error) {
+                            debugLog('Geolocation error: ' + error.message);
+                            alert('Error: The Geolocation service failed. Error: ' + error.message);
                         });
                     } else {
+                        debugLog('Geolocation not supported by browser');
                         alert('Error: Your browser doesn\'t support geolocation.');
                     }
                 });
                 
                 // Date selection change handler for sun path
                 document.getElementById('date-select').addEventListener('change', function() {
+                    debugLog('Date changed to: ' + this.value);
+                    
                     if (selectedLocation) {
                         updateSunPath(selectedLocation, this.value);
                     }
                 });
                 
-                // Set up a default location
+                // Show default data for San Francisco
+                debugLog('Loading default data for San Francisco');
                 placeMarker(defaultLocation);
                 updateSelectedLocation(defaultLocation);
                 loadSiteData(defaultLocation);
                 
-                console.log('Map initialization complete');
             } catch (error) {
-                console.error('Error initializing map:', error);
+                debugLog('ERROR initializing map: ' + error.message);
+                console.error('Map initialization error:', error);
                 document.getElementById('loading-indicator').classList.add('hidden');
-                alert('Error initializing map. Please check console for details.');
             }
         }
         
@@ -292,42 +287,47 @@
                     map: map,
                     animation: google.maps.Animation.DROP
                 });
+                
+                debugLog('Marker placed at: ' + location.toString());
             } catch (error) {
-                console.error('Error placing marker:', error);
+                debugLog('ERROR placing marker: ' + error.message);
             }
         }
         
         // Function to update selected location display
         function updateSelectedLocation(location) {
-            selectedLocation = location;
-            
             try {
-                // Display coordinates while geocoding
-                document.getElementById('selected-location').textContent = 
-                    `Selected Location: (${location.lat().toFixed(5)}, ${location.lng().toFixed(5)})`;
+                selectedLocation = location;
                 
-                // Reverse geocode to get address
+                // Simple direct coordinate display as backup
+                const coordsText = `Selected Location: (${location.lat().toFixed(5)}, ${location.lng().toFixed(5)})`;
+                document.getElementById('selected-location').textContent = coordsText;
+                
+                // Try to get address via reverse geocoding
                 geocoder.geocode({ 'location': location }, function(results, status) {
                     if (status === 'OK' && results[0]) {
                         document.getElementById('selected-location').textContent = 
                             `Selected Location: ${results[0].formatted_address}`;
+                        debugLog('Address found: ' + results[0].formatted_address);
                     }
                 });
             } catch (error) {
-                console.error('Error updating location display:', error);
+                debugLog('ERROR updating location: ' + error.message);
             }
         }
         
         // Function to load site data
         function loadSiteData(location) {
-            // Show loading indicator
-            document.getElementById('loading-indicator').classList.remove('hidden');
-            
-            // Set a safety timeout to hide the loading indicator
-            ensureLoadingCompletes();
-            
             try {
-                console.log('Loading data for location:', location.toString());
+                // Show loading indicator
+                document.getElementById('loading-indicator').classList.remove('hidden');
+                debugLog('Loading data for location: ' + location.toString());
+                
+                // Ensure loading completes eventually
+                const loadingTimeout = setTimeout(() => {
+                    document.getElementById('loading-indicator').classList.add('hidden');
+                    debugLog('Loading timeout triggered - forcing completion');
+                }, 10000);
                 
                 // Update climate data
                 updateClimateData(location);
@@ -337,24 +337,28 @@
                 
                 // Hide loading indicator
                 document.getElementById('loading-indicator').classList.add('hidden');
+                clearTimeout(loadingTimeout);
+                debugLog('Data loading complete');
             } catch (error) {
-                console.error('Error loading site data:', error);
                 document.getElementById('loading-indicator').classList.add('hidden');
+                debugLog('ERROR loading data: ' + error.message);
             }
         }
         
         // Function to update climate data
         function updateClimateData(location) {
             try {
-                console.log('Updating climate data');
-                // Simulate climate data - in reality, this would come from an API
+                debugLog('Updating climate data...');
                 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
                 
-                // Generate random temperature data based on location
-                // Using latitude to simulate seasonal variations
+                // Generate climate data based on location
                 const lat = location.lat();
-                const tempOffset = (Math.abs(lat) - 30) * 0.5; // Adjust temperatures based on latitude
+                const lng = location.lng();
                 
+                // Adjust temperatures based on latitude
+                const tempOffset = (Math.abs(lat) - 30) * 0.5;
+                
+                // Generate high and low temperatures with seasonal variation
                 const highTemps = months.map((_, index) => {
                     const seasonalFactor = Math.sin((index / 12) * 2 * Math.PI);
                     return Math.round(25 - tempOffset + seasonalFactor * (15 - lat * 0.1));
@@ -365,32 +369,19 @@
                     return Math.round(15 - tempOffset + seasonalFactor * (10 - lat * 0.1));
                 });
                 
-                // Generate random rainfall data
-                // Using longitude to simulate different climate patterns
-                const lng = location.lng();
+                // Generate rainfall data with appropriate patterns
                 const isWesternHemisphere = lng < 0;
-                
                 const rainfall = months.map((_, index) => {
                     let seasonalFactor;
                     
                     if (isWesternHemisphere) {
-                        // Western hemisphere seasonal patterns
-                        if (lat > 0) {
-                            // Northern hemisphere
-                            seasonalFactor = Math.cos((index / 12) * 2 * Math.PI);
-                        } else {
-                            // Southern hemisphere
-                            seasonalFactor = -Math.cos((index / 12) * 2 * Math.PI);
-                        }
+                        seasonalFactor = lat > 0 
+                            ? Math.cos((index / 12) * 2 * Math.PI)  // Northern hemisphere
+                            : -Math.cos((index / 12) * 2 * Math.PI); // Southern hemisphere
                     } else {
-                        // Eastern hemisphere seasonal patterns
-                        if (lat > 0) {
-                            // Northern hemisphere
-                            seasonalFactor = Math.sin((index / 12) * 2 * Math.PI);
-                        } else {
-                            // Southern hemisphere
-                            seasonalFactor = -Math.sin((index / 12) * 2 * Math.PI);
-                        }
+                        seasonalFactor = lat > 0 
+                            ? Math.sin((index / 12) * 2 * Math.PI)  // Northern hemisphere
+                            : -Math.sin((index / 12) * 2 * Math.PI); // Southern hemisphere
                     }
                     
                     return Math.max(5, Math.round(50 + seasonalFactor * 30 + Math.random() * 20));
@@ -401,6 +392,7 @@
                     climateChart.destroy();
                 }
                 
+                debugLog('Creating climate chart...');
                 const ctx = document.getElementById('climate-chart').getContext('2d');
                 
                 climateChart = new Chart(ctx, {
@@ -430,7 +422,6 @@
                                 label: 'Rainfall (mm)',
                                 data: rainfall,
                                 backgroundColor: 'rgba(75, 192, 192, 0.5)',
-                                borderColor: 'rgba(75, 192, 192, 1)',
                                 borderWidth: 1,
                                 yAxisID: 'y1'
                             }
@@ -476,19 +467,19 @@
                 const maxTemp = Math.max(...highTemps);
                 document.getElementById('temp-range').textContent = `${minTemp}°C to ${maxTemp}°C`;
                 
-                console.log('Climate data updated successfully');
+                debugLog('Climate data updated successfully');
             } catch (error) {
-                console.error('Error updating climate data:', error);
+                debugLog('ERROR updating climate data: ' + error.message);
             }
         }
         
         // Function to update sun path
         function updateSunPath(location, dateCode) {
             try {
-                console.log('Updating sun path');
+                debugLog('Updating sun path diagram...');
                 const sunpathDiagram = document.getElementById('sunpath-diagram');
                 
-                // Make sure we have correct dimensions
+                // Set canvas dimensions explicitly
                 sunpathDiagram.width = sunpathDiagram.offsetWidth;
                 sunpathDiagram.height = sunpathDiagram.offsetHeight;
                 
@@ -497,7 +488,7 @@
                 // Clear the canvas
                 ctx.clearRect(0, 0, sunpathDiagram.width, sunpathDiagram.height);
                 
-                // Set up the diagram
+                // Set up dimensions and coordinates
                 const width = sunpathDiagram.width;
                 const height = sunpathDiagram.height;
                 const centerX = width / 2;
@@ -508,7 +499,7 @@
                 ctx.beginPath();
                 ctx.moveTo(0, centerY);
                 ctx.lineTo(width, centerY);
-                ctx.strokeStyle = isDarkMode() ? '#666' : '#aaa';
+                ctx.strokeStyle = '#888';
                 ctx.lineWidth = 2;
                 ctx.stroke();
                 
@@ -523,7 +514,7 @@
                 ctx.font = '14px Arial';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.fillStyle = isDarkMode() ? '#ddd' : '#333';
+                ctx.fillStyle = '#333';
                 
                 compassPoints.forEach(point => {
                     const x = centerX + Math.sin(point.angle) * (radius + 20);
@@ -556,12 +547,6 @@
                 
                 // Draw sun path arc
                 ctx.beginPath();
-                
-                // Create an arc from east to west
-                // We'll simulate the sun path as a half-circle, adjusted for season and latitude
-                ctx.moveTo(centerX - radius, centerY); // Starting at the west point
-                
-                // Draw the sun path
                 for (let angle = -Math.PI; angle <= 0; angle += 0.01) {
                     const x = centerX + Math.sin(angle) * radius;
                     const y = centerY - Math.cos(angle) * radius * maxAltitude;
@@ -572,8 +557,7 @@
                         ctx.lineTo(x, y);
                     }
                 }
-                
-                ctx.strokeStyle = isDarkMode() ? '#ffa500' : '#ff6600';
+                ctx.strokeStyle = '#ff6600';
                 ctx.lineWidth = 3;
                 ctx.stroke();
                 
@@ -593,42 +577,34 @@
                     // Draw sun
                     ctx.beginPath();
                     ctx.arc(x, y, 8, 0, Math.PI * 2);
-                    ctx.fillStyle = isDarkMode() ? '#ffcc00' : '#ffaa00';
+                    ctx.fillStyle = '#ffaa00';
                     ctx.fill();
                     
                     // Draw time label
-                    ctx.fillStyle = isDarkMode() ? '#ddd' : '#333';
+                    ctx.fillStyle = '#333';
                     ctx.fillText(pos.time, x, y + 20);
                 });
                 
-                console.log('Sun path updated successfully');
+                debugLog('Sun path updated successfully');
             } catch (error) {
-                console.error('Error updating sun path:', error);
+                debugLog('ERROR updating sun path: ' + error.message);
             }
         }
         
-        // Helper function to check if dark mode is active
-        function isDarkMode() {
-            return document.documentElement.classList.contains('dark');
-        }
-        
-        // Check if Google Maps API is loaded, then initialize
-        function initializeApp() {
-            console.log('Checking if Google Maps API is loaded');
-            try {
-                if (typeof google === 'undefined' || typeof google.maps === 'undefined') {
-                    console.log('Google Maps API not yet loaded, waiting...');
-                    setTimeout(initializeApp, 1000);
-                    return;
-                }
-                
-                console.log('Google Maps API loaded, initializing app');
-                initMap();
-            } catch (error) {
-                console.error('Error checking Google Maps API:', error);
-                document.getElementById('loading-indicator').classList.add('hidden');
-                alert('Error loading Google Maps. Please refresh the page.');
+        // Initialize the app when page loads
+        window.onload = function() {
+            debugLog('Page loaded, initializing application...');
+            
+            // Check if Google Maps is available
+            if (typeof google === 'undefined' || typeof google.maps === 'undefined') {
+                debugLog('ERROR: Google Maps API not loaded');
+                alert('Google Maps API failed to load. Please check your internet connection and try again.');
+                return;
             }
-        }
-        
-        // Initialize the
+            
+            // Initialize map after a short delay
+            setTimeout(initMap, 200);
+        };
+    </script>
+</body>
+</html>
