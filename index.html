@@ -3,33 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minimal Permaculture Analysis</title>
+    <title>Permaculture Site Analysis</title>
     <!-- Use CDN for quick prototyping -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Load Google Maps API properly with async attribute -->
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAuFONHLyXGalqEH9VL3oFl8MpHgF7sa5k&libraries=places" async defer></script>
     <style>
         #map-container {
             height: 400px;
+            width: 100%;
         }
         #climate-chart-container {
             height: 300px;
-        }
-        #sunpath-diagram {
             width: 100%;
-            height: 200px;
+        }
+        #debug-container {
+            height: 150px;
+            overflow-y: auto;
+        }
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
     </style>
 </head>
 <body class="bg-gray-100 p-4">
+    <div id="loading" class="loading-overlay">
+        <div class="bg-white p-4 rounded-lg shadow-lg text-center">
+            <div class="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
+            <p class="mt-2">Loading application...</p>
+            <button id="cancel-loading" class="mt-2 px-4 py-1 bg-red-500 text-white rounded hover:bg-red-600">Cancel</button>
+        </div>
+    </div>
+
     <div class="max-w-4xl mx-auto">
-        <h1 class="text-2xl font-bold mb-4">Minimal Permaculture Site Analysis</h1>
+        <h1 class="text-2xl font-bold mb-4">Permaculture Site Analysis</h1>
         
         <!-- Map Section -->
         <div class="bg-white rounded-lg shadow p-4 mb-6">
             <h2 class="text-xl font-semibold mb-2">Location Map</h2>
-            <div id="map-container" class="rounded-lg overflow-hidden mb-4"></div>
+            <div id="map-container" class="rounded-lg overflow-hidden mb-4 border border-gray-300"></div>
             <p id="selected-location" class="text-gray-600">Default location: San Francisco, CA</p>
         </div>
         
@@ -42,11 +62,11 @@
             <div class="grid grid-cols-2 gap-4 mt-4">
                 <div>
                     <h3 class="font-medium">Annual Rainfall</h3>
-                    <p id="avg-rainfall" class="text-xl font-bold text-blue-600">600 mm/year</p>
+                    <p id="avg-rainfall" class="text-xl font-bold text-blue-600">--</p>
                 </div>
                 <div>
                     <h3 class="font-medium">Temperature Range</h3>
-                    <p id="temp-range" class="text-xl font-bold text-blue-600">10°C to 25°C</p>
+                    <p id="temp-range" class="text-xl font-bold text-blue-600">--</p>
                 </div>
             </div>
         </div>
@@ -54,7 +74,9 @@
         <!-- Debug Section -->
         <div class="bg-white rounded-lg shadow p-4 mb-4">
             <h2 class="text-xl font-semibold mb-2">Debug Information</h2>
-            <div id="debug-info" class="text-sm text-gray-700 whitespace-pre-wrap"></div>
+            <div id="debug-container" class="text-sm text-gray-700 bg-gray-100 p-2 rounded">
+                <pre id="debug-info" class="whitespace-pre-wrap"></pre>
+            </div>
         </div>
     </div>
 
@@ -64,74 +86,198 @@
             console.log(message);
             const debugInfo = document.getElementById('debug-info');
             if (debugInfo) {
-                debugInfo.textContent = message + '\n' + debugInfo.textContent;
+                const timestamp = new Date().toLocaleTimeString();
+                debugInfo.textContent = `[${timestamp}] ${message}\n` + debugInfo.textContent;
             }
         }
         
-        // Initialize the app when the page loads completely
-        document.addEventListener('DOMContentLoaded', function() {
-            debug("DOM loaded, waiting for Google Maps...");
-            
-            // Check for Google Maps API to be loaded
-            let mapCheckInterval = setInterval(function() {
-                if (window.google && window.google.maps) {
-                    clearInterval(mapCheckInterval);
-                    initializeApp();
-                }
-            }, 500);
-            
-            // Set a timeout to stop checking after 10 seconds
-            setTimeout(function() {
-                clearInterval(mapCheckInterval);
-                debug("ERROR: Google Maps failed to load within timeout period");
-            }, 10000);
+        // Function to hide loading indicator
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+        }
+        
+        // Cancel loading button
+        document.getElementById('cancel-loading').addEventListener('click', function() {
+            hideLoading();
+            debug("Loading cancelled by user");
         });
         
-        function initializeApp() {
-            debug("Google Maps loaded, initializing application");
+        // Global variable to track map loading
+        let mapsLoaded = false;
+        
+        // Load Google Maps API programmatically
+        function loadGoogleMaps() {
+            debug("Loading Google Maps API...");
+            
+            return new Promise((resolve, reject) => {
+                // Create script element
+                const script = document.createElement('script');
+                script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyAuFONHLyXGalqEH9VL3oFl8MpHgF7sa5k&libraries=places&callback=onGoogleMapsLoaded`;
+                script.async = true;
+                script.defer = true;
+                
+                // Set up global callback function
+                window.onGoogleMapsLoaded = function() {
+                    mapsLoaded = true;
+                    debug("Google Maps API loaded successfully");
+                    resolve();
+                };
+                
+                // Handle errors
+                script.onerror = function() {
+                    debug("ERROR: Failed to load Google Maps API");
+                    reject(new Error("Failed to load Google Maps API"));
+                };
+                
+                // Add to document
+                document.head.appendChild(script);
+                
+                // Set a timeout
+                setTimeout(() => {
+                    if (!mapsLoaded) {
+                        debug("ERROR: Google Maps API loading timed out");
+                        reject(new Error("Google Maps API loading timed out"));
+                    }
+                }, 10000);
+            });
+        }
+        
+        // Initialize the application
+        async function initApp() {
+            debug("Application initialization started");
             
             try {
-                // Default location (San Francisco coordinates as plain numbers)
+                // Load Google Maps API
+                await loadGoogleMaps();
+                
+                // Initialize map
+                initMap();
+                
+                // Create climate chart
+                createClimateChart();
+                
+                // Hide loading indicator
+                hideLoading();
+                
+                debug("Application initialized successfully");
+            } catch (error) {
+                debug(`ERROR: ${error.message}`);
+                hideLoading();
+            }
+        }
+        
+        // Initialize the map
+        function initMap() {
+            try {
+                debug("Initializing map...");
+                
+                // Default location (San Francisco)
                 const sfLatLng = { lat: 37.7749, lng: -122.4194 };
                 
                 // Create the map
                 const map = new google.maps.Map(document.getElementById('map-container'), {
                     center: sfLatLng,
                     zoom: 12,
-                    mapTypeId: google.maps.MapTypeId.TERRAIN
+                    mapTypeId: google.maps.MapTypeId.TERRAIN,
+                    mapTypeControl: true
                 });
                 
                 debug("Map created successfully");
                 
-                // Create a marker at San Francisco
+                // Create a marker
                 const marker = new google.maps.Marker({
                     position: sfLatLng,
                     map: map,
                     title: 'San Francisco'
                 });
                 
-                debug("Marker placed successfully");
+                // Add click event to map
+                map.addListener('click', function(event) {
+                    // Clear previous marker
+                    if (marker) {
+                        marker.setMap(null);
+                    }
+                    
+                    // Create new marker
+                    marker.setPosition(event.latLng);
+                    marker.setMap(map);
+                    
+                    // Get coordinates
+                    const lat = event.latLng.lat();
+                    const lng = event.latLng.lng();
+                    
+                    debug(`Map clicked at: ${lat.toFixed(4)}, ${lng.toFixed(4)}`);
+                    document.getElementById('selected-location').textContent = 
+                        `Selected Location: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+                    
+                    // Generate new climate data based on location
+                    updateClimateData(lat, lng);
+                });
                 
-                // Create a simple climate chart
-                createClimateChart();
-                
-                debug("Climate chart created");
-                
+                debug("Map initialization completed");
             } catch (error) {
-                debug("ERROR initializing app: " + error.message);
+                debug(`ERROR in map initialization: ${error.message}`);
             }
         }
         
+        // Create climate chart with default data
         function createClimateChart() {
-            const ctx = document.getElementById('climate-chart').getContext('2d');
+            debug("Creating climate chart...");
+            
+            try {
+                // San Francisco data (default)
+                updateClimateData(37.7749, -122.4194);
+                debug("Climate chart created successfully");
+            } catch (error) {
+                debug(`ERROR creating climate chart: ${error.message}`);
+            }
+        }
+        
+        // Update climate data based on latitude/longitude
+        function updateClimateData(lat, lng) {
             const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
             
-            // Sample data for San Francisco
-            const highTemps = [14, 16, 17, 18, 19, 21, 21, 22, 23, 21, 17, 14];
-            const lowTemps = [8, 9, 10, 10, 11, 12, 13, 13, 14, 12, 10, 8];
-            const rainfall = [119, 97, 78, 31, 12, 3, 0, 1, 6, 34, 81, 119];
+            // Generate seasonal data based on latitude (northern/southern hemisphere)
+            const isNorthern = lat > 0;
+            const absLat = Math.abs(lat);
+            const latFactor = Math.min(absLat / 90, 1);
             
-            new Chart(ctx, {
+            // Temperature variation increases with distance from equator
+            const tempVariation = 5 + 20 * latFactor;
+            const baseTemp = 20 - 10 * latFactor;
+            
+            // Generate data with seasonal variations
+            const highTemps = months.map((_, index) => {
+                // Seasonal offset (0-11) -> radians
+                const seasonalOffset = ((index + (isNorthern ? 0 : 6)) % 12) / 12 * 2 * Math.PI;
+                // Sin wave for seasonal variation
+                const seasonalFactor = Math.sin(seasonalOffset);
+                return Math.round(baseTemp + seasonalFactor * tempVariation);
+            });
+            
+            const lowTemps = highTemps.map(temp => Math.round(temp - 5 - 5 * latFactor));
+            
+            // Rainfall depends on longitude (rough approximation)
+            const isCoastal = Math.abs(lng) > 120 || Math.abs(lng) < 30;
+            const rainfallBase = isCoastal ? 80 : 40;
+            const rainfallVariation = isCoastal ? 100 : 50;
+            
+            const rainfall = months.map((_, index) => {
+                const seasonalOffset = ((index + (isNorthern ? 0 : 6)) % 12) / 12 * 2 * Math.PI;
+                const seasonalFactor = (Math.sin(seasonalOffset) + 1) / 2; // 0 to 1
+                return Math.round(rainfallBase + seasonalFactor * rainfallVariation);
+            });
+            
+            // Update chart
+            const ctx = document.getElementById('climate-chart').getContext('2d');
+            
+            // Check if there's an existing chart and destroy it
+            if (window.climateChart) {
+                window.climateChart.destroy();
+            }
+            
+            // Create new chart
+            window.climateChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: months,
@@ -200,6 +346,12 @@
             const maxTemp = Math.max(...highTemps);
             document.getElementById('temp-range').textContent = `${minTemp}°C to ${maxTemp}°C`;
         }
+        
+        // Start app when page is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            debug("DOM loaded, starting application");
+            initApp();
+        });
     </script>
 </body>
 </html>
